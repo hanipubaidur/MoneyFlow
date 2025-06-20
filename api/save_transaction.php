@@ -62,19 +62,37 @@ try {
         // Update savings target if selected
         if ($type === 'expense' && $categoryName === 'Savings' && 
             !empty($_POST['savings_target_id'])) {
-            
-            $stmt = $conn->prepare("
-                UPDATE savings_targets 
-                SET current_amount = current_amount + ?,
-                    status = CASE 
-                        WHEN current_amount + ? >= target_amount THEN 'achieved'
-                        ELSE status 
-                    END
-                WHERE id = ? AND status = 'ongoing'
-            ");
-            
-            if (!$stmt->execute([$amount, $amount, $_POST['savings_target_id']])) {
-                throw new Exception('Failed to update savings target');
+
+            // Ambil data target
+            $stmt = $conn->prepare("SELECT target_amount, current_amount FROM savings_targets WHERE id = ? AND status = 'ongoing' FOR UPDATE");
+            $stmt->execute([$_POST['savings_target_id']]);
+            $target = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($target) {
+                $remaining = $target['target_amount'] - $target['current_amount'];
+                $amountToAdd = min($amount, $remaining);
+
+                // Update hanya sebesar kekurangan target
+                $stmt = $conn->prepare("
+                    UPDATE savings_targets 
+                    SET current_amount = current_amount + ?,
+                        status = CASE 
+                            WHEN current_amount + ? >= target_amount THEN 'achieved'
+                            ELSE status 
+                        END
+                    WHERE id = ? AND status = 'ongoing'
+                ");
+                if (!$stmt->execute([$amountToAdd, $amountToAdd, $_POST['savings_target_id']])) {
+                    throw new Exception('Failed to update savings target');
+                }
+
+                // Jika ada kelebihan, bisa dikembalikan ke balance atau abaikan (tidak masuk target)
+                // Optional: Catat kelebihan sebagai expense biasa atau tampilkan pesan
+                if ($amount > $amountToAdd) {
+                    // Misal: logika pengembalian ke balance, atau hanya info
+                    // $excess = $amount - $amountToAdd;
+                    // ... (implementasi sesuai kebutuhan aplikasi)
+                }
             }
         }
 
