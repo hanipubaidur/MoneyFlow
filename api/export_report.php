@@ -53,18 +53,18 @@ try {
     }
 
     $summaryQuery = "SELECT 
-        COALESCE(SUM(CASE WHEN type = 'income' AND status = 'completed' THEN amount END), 0) as total_income,
-        COALESCE(SUM(CASE WHEN type = 'expense' AND status = 'completed' THEN amount END), 0) as total_expense,
-        COUNT(CASE WHEN type = 'income' AND status = 'completed' THEN 1 END) as income_count,
-        COUNT(CASE WHEN type = 'expense' AND status = 'completed' THEN 1 END) as expense_count,
-        COALESCE(SUM(CASE WHEN type = 'expense' AND status = 'completed' AND expense_category_id IN 
+        COALESCE(SUM(CASE WHEN type = 'income' THEN amount END), 0) as total_income,
+        COALESCE(SUM(CASE WHEN type = 'expense' THEN amount END), 0) as total_expense,
+        COUNT(CASE WHEN type = 'income' THEN 1 END) as income_count,
+        COUNT(CASE WHEN type = 'expense' THEN 1 END) as expense_count,
+        COALESCE(SUM(CASE WHEN type = 'expense' AND expense_category_id IN 
             (SELECT id FROM expense_categories WHERE category_name LIKE '%saving%' OR category_name LIKE '%invest%') 
             THEN amount END), 0) as savings,
-        COALESCE(SUM(CASE WHEN type = 'expense' AND status = 'completed' AND expense_category_id IN 
+        COALESCE(SUM(CASE WHEN type = 'expense' AND expense_category_id IN 
             (SELECT id FROM expense_categories WHERE category_name LIKE '%debt%' OR category_name LIKE '%loan%') 
             THEN amount END), 0) as debt,
-        COALESCE(AVG(CASE WHEN type = 'income' AND status = 'completed' THEN amount END), 0) as avg_income,
-        COALESCE(AVG(CASE WHEN type = 'expense' AND status = 'completed' THEN amount END), 0) as avg_expense,
+        COALESCE(AVG(CASE WHEN type = 'income' THEN amount END), 0) as avg_income,
+        COALESCE(AVG(CASE WHEN type = 'expense' THEN amount END), 0) as avg_expense,
         COUNT(DISTINCT DATE_FORMAT(date, '%Y-%m')) as active_months
         FROM transactions WHERE status != 'deleted'";
 
@@ -171,7 +171,7 @@ try {
         COUNT(DISTINCT DATE_FORMAT(t.date, '%Y-%m')) as active_months
         FROM income_sources i
         LEFT JOIN transactions t ON i.id = t.income_source_id 
-        WHERE t.type = 'income' AND t.status = 'completed'
+        WHERE t.type = 'income' AND t.status != 'deleted'
         GROUP BY i.id, i.source_name
         ORDER BY total DESC";
 
@@ -257,7 +257,7 @@ try {
         COUNT(DISTINCT DATE_FORMAT(t.date, '%Y-%m')) as months_active
         FROM expense_categories ec
         LEFT JOIN transactions t ON ec.id = t.expense_category_id 
-        WHERE t.type = 'expense' AND t.status = 'completed'
+        WHERE t.type = 'expense' AND t.status != 'deleted'
         GROUP BY ec.id, ec.category_name
         ORDER BY total DESC";
 
@@ -339,14 +339,14 @@ try {
     $trendsQuery = "SELECT 
         DATE_FORMAT(date, '%Y-%m') as period,
         DATE_FORMAT(date, '%b %Y') as display_period,
-        SUM(CASE WHEN type = 'income' AND status = 'completed' THEN amount ELSE 0 END) as income,
-        SUM(CASE WHEN type = 'expense' AND status = 'completed' THEN amount ELSE 0 END) as expense,
-        COUNT(CASE WHEN type = 'income' AND status = 'completed' THEN 1 END) as income_txn,
-        COUNT(CASE WHEN type = 'expense' AND status = 'completed' THEN 1 END) as expense_txn,
-        AVG(CASE WHEN type = 'income' AND status = 'completed' THEN amount END) as avg_income,
-        AVG(CASE WHEN type = 'expense' AND status = 'completed' THEN amount END) as avg_expense
+        SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
+        SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense,
+        COUNT(CASE WHEN type = 'income' THEN 1 END) as income_txn,
+        COUNT(CASE WHEN type = 'expense' THEN 1 END) as expense_txn,
+        AVG(CASE WHEN type = 'income' THEN amount END) as avg_income,
+        AVG(CASE WHEN type = 'expense' THEN amount END) as avg_expense
         FROM transactions 
-        WHERE status = 'completed' AND date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+        WHERE status != 'deleted' AND date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
         GROUP BY DATE_FORMAT(date, '%Y-%m'), DATE_FORMAT(date, '%b %Y')
         ORDER BY period DESC
         LIMIT 12";
@@ -419,7 +419,7 @@ try {
 
     // Header styling
     $transactions->setCellValue('A1', '📋 COMPLETE TRANSACTION MASTER DATABASE');
-    $transactions->mergeCells('A1:H1');
+    $transactions->mergeCells('A1:E1');
     $transactions->getStyle('A1')->applyFromArray([
         'font' => ['bold' => true, 'size' => 18, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $theme['secondary']]],
@@ -427,7 +427,7 @@ try {
     ]);
 
     // PERBAIKAN 1: Definisi headers yang hilang
-    $transHeaders = ['📅 Date', '🔄 Type', '📂 Category', '💰 Amount', '✅ Status', '📝 Description'];
+    $transHeaders = ['📅 Date', '🔄 Type', '📂 Category', '💰 Amount', '📝 Description'];
 
     // Column headers styling
     foreach($transHeaders as $i => $header) {
@@ -436,7 +436,7 @@ try {
         $transactions->getColumnDimension($col)->setAutoSize(true);
     }
 
-    $transactions->getStyle('A3:F3')->applyFromArray([
+    $transactions->getStyle('A3:E3')->applyFromArray([
         'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $theme['accent']]],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -444,7 +444,7 @@ try {
     ]);
 
     $transQuery = "SELECT 
-        t.id, t.date, t.type, t.amount, t.status, t.description,
+        t.id, t.date, t.type, t.amount, t.description,
         CASE WHEN t.type = 'income' THEN i.source_name ELSE e.category_name END as category
         FROM transactions t
         LEFT JOIN income_sources i ON t.income_source_id = i.id
@@ -478,8 +478,7 @@ try {
             ['B', $typeEmoji . ' ' . ucfirst($t['type']), Alignment::HORIZONTAL_CENTER],
             ['C', $t['category'] ?: '-', Alignment::HORIZONTAL_LEFT],
             ['D', $amount, Alignment::HORIZONTAL_RIGHT],
-            ['E', ucfirst($t['status']), Alignment::HORIZONTAL_CENTER],
-            ['F', $t['description'] ?: '-', Alignment::HORIZONTAL_LEFT]
+            ['E', $t['description'] ?: '-', Alignment::HORIZONTAL_LEFT]
         ];
 
         // Set values and styling for each cell
@@ -500,7 +499,7 @@ try {
 
         // Row styling
         $bgColor = $t['type'] === 'income' ? 'E8F5E9' : 'FBE9E7';
-        $transactions->getStyle("A$row:F$row")->applyFromArray([
+        $transactions->getStyle("A$row:E$row")->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $bgColor]],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
         ]);
@@ -614,7 +613,7 @@ try {
         ->setOddFooter('&L&BGenerated: ' . date('Y-m-d H:i:s') . '&C&BMoneyFlow Platform&R&BPage &P of &N');
 
     // Set column widths for better display
-    $columnWidths = ['A' => 12, 'B' => 15, 'C' => 20, 'D' => 15, 'E' => 12, 'F' => 25, 'G' => 15, 'H' => 12];
+    $columnWidths = ['A' => 12, 'B' => 15, 'C' => 20, 'D' => 15, 'E' => 25, 'F' => 15, 'G' => 15, 'H' => 12];
     foreach($columnWidths as $col => $width) {
         $transactions->getColumnDimension($col)->setWidth($width);
     }
