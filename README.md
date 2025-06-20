@@ -1,5 +1,6 @@
 # 💰 MoneyFlow - Pencatat Keuangan Pribadi
-Update Terakhir: 19 Juni 2025 4:30pm
+
+![Last Commit](https://img.shields.io/github/last-commit/hanipubaidur/MoneyFlow?style=flat-square)
 
 ## 📝 Pembaruan Terbaru
 - 🟢 Perbaikan logika badge status Surplus/Deficit/Break Even/No Data pada Monthly Comparison Table
