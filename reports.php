@@ -157,7 +157,7 @@ ob_start();
                                 <!-- Monthly Stats Table -->
                                 <div class="col-12 mb-4">
                                     <div class="monthly-stats p-3 bg-light rounded">
-                                        <h6 class="text-primary mb-3">Monthly Comparison (Last 6 Months)</h6>
+                                        <h6 class="text-primary mb-3">Monthly Comparison</h6>
                                         <div class="table-responsive">
                                             <table class="table table-sm monthly-stats-table">
                                                 <thead>
@@ -190,18 +190,25 @@ ob_start();
                                                         $netAmount = $stat['income'] - $stat['expense'];
                                                         $totalIncome += $stat['income'];
                                                         $totalExpense += $stat['expense'];
+                                                        $isEmpty = ($stat['income'] == 0 && $stat['expense'] == 0);
                                                     ?>
                                                         <tr>
                                                             <td><?= $stat['month'] ?></td>
                                                             <td class="text-end"><?= formatCurrency($stat['income']) ?></td>
                                                             <td class="text-end"><?= formatCurrency($stat['expense']) ?></td>
-                                                            <td class="text-end <?= $netAmount >= 0 ? 'text-success' : 'text-danger' ?>">
+                                                            <td class="text-end <?= $netAmount > 0 ? 'text-success' : ($netAmount < 0 ? 'text-danger' : '') ?>">
                                                                 <?= formatCurrency($netAmount) ?>
                                                             </td>
                                                             <td class="text-end">
-                                                                <span class="badge bg-<?= $netAmount >= 0 ? 'success' : 'danger' ?>">
-                                                                    <?= $netAmount >= 0 ? 'Surplus' : 'Deficit' ?>
-                                                                </span>
+                                                                <?php if ($isEmpty): ?>
+                                                                    <span class="badge bg-secondary">No Data</span>
+                                                                <?php elseif ($netAmount > 0): ?>
+                                                                    <span class="badge bg-success">Surplus</span>
+                                                                <?php elseif ($netAmount < 0): ?>
+                                                                    <span class="badge bg-danger">Deficit</span>
+                                                                <?php else: ?>
+                                                                    <span class="badge bg-secondary">Break Even</span>
+                                                                <?php endif; ?>
                                                             </td>
                                                         </tr>
                                                     <?php endforeach; ?>
