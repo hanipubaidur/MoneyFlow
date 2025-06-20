@@ -6,94 +6,67 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
     
-    $period = $_GET['period'] ?? 'day';
+    $period = $_GET['period'] ?? 'month';
     
+    // Perbaiki where clause
     switch($period) {
         case 'day':
-            $where_clause = "DATE(t.date) = CURRENT_DATE";
+            $where_clause = "DATE(date) = CURRENT_DATE";
             $label = "Daily";
             break;
         case 'week':
-            $where_clause = "YEARWEEK(t.date) = YEARWEEK(CURRENT_DATE)";
+            $where_clause = "YEARWEEK(date, 1) = YEARWEEK(CURRENT_DATE, 1)";
             $label = "Weekly";
             break;
         case 'month':
-            $where_clause = "DATE_FORMAT(t.date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')";
+            $where_clause = "DATE_FORMAT(date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')";
             $label = "Monthly";
             break;
         case 'year':
-            $where_clause = "YEAR(t.date) = YEAR(CURRENT_DATE)";
+            $where_clause = "YEAR(date) = YEAR(CURRENT_DATE)";
             $label = "Yearly";
             break;
+        default:
+            $where_clause = "DATE_FORMAT(date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')";
+            $label = "Monthly";
     }
 
-    // Debug: Log period dan where clause
-    error_log("Selected period: $period");
-    error_log("Where clause: $where_clause");
-
-    // Perbaikan query statistik
+    // Perbaiki query untuk statistik yang lebih akurat
     $query = "SELECT 
-        -- Total balance (sisa uang dari semua transaksi)
-        (SELECT COALESCE(SUM(
-            CASE 
-                WHEN type = 'income' AND status = 'completed' THEN amount 
-                WHEN type = 'expense' AND status = 'completed' THEN -amount
-                ELSE 0
-            END), 0)
-        FROM transactions) as total_balance,
+        (SELECT total_balance FROM balance_tracking WHERE id = 1) as total_balance,
         
-        -- Period stats
-        (SELECT COALESCE(SUM(amount), 0) 
-         FROM transactions t
-         WHERE type = 'income' 
-         AND status = 'completed'
+        (SELECT COALESCE(SUM(amount), 0)
+         FROM transactions 
+         WHERE type = 'income' AND status = 'completed'
          AND $where_clause) as period_income,
-        
-        (SELECT MAX(created_at) 
-         FROM transactions t
-         WHERE type = 'income' 
-         AND (status = 'completed' OR status = 'used_for_goal')
-         AND $where_clause) as last_income_update,
-        
-        -- Expense untuk period yang dipilih + last update
-        (SELECT COALESCE(SUM(amount), 0) 
-         FROM transactions t
-         WHERE type = 'expense' 
-         AND (status = 'completed' OR status = 'used_for_goal')
+         
+        (SELECT COALESCE(SUM(amount), 0)
+         FROM transactions 
+         WHERE type = 'expense' AND status = 'completed'
          AND $where_clause) as period_expenses,
          
-        (SELECT MAX(created_at) 
+        (SELECT COALESCE(SUM(t.amount), 0)
          FROM transactions t
-         WHERE type = 'expense' 
-         AND (status = 'completed' OR status = 'used_for_goal')
-         AND $where_clause) as last_expense_update,
-
-        -- Savings untuk period yang dipilih
-        (SELECT COALESCE(SUM(amount), 0) 
-         FROM transactions t
-         WHERE type = 'expense' 
-         AND (status = 'completed' OR status = 'used_for_goal')
-         AND expense_category_id IN (
-             SELECT id FROM expense_categories 
-             WHERE category_name = 'Savings'
-         )
+         JOIN expense_categories ec ON t.expense_category_id = ec.id
+         WHERE t.type = 'expense' AND t.status = 'completed'
+         AND ec.category_name = 'Savings'
          AND $where_clause) as period_savings,
+         
+        (SELECT MAX(created_at) FROM transactions WHERE $where_clause) as last_update,
+        
+        (SELECT MAX(created_at) 
+         FROM transactions 
+         WHERE type = 'income' AND $where_clause) as last_income_update,
+         
+        (SELECT MAX(created_at)
+         FROM transactions 
+         WHERE type = 'expense' AND $where_clause) as last_expense_update";
 
-        -- Latest transaction time
-        (SELECT MAX(created_at) FROM transactions 
-         WHERE status IN ('completed', 'used_for_goal')) as last_update";
-
-    $stmt = $conn->query($query);
-    $stats = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    // Debug: Log query results
-    error_log("Query results: " . json_encode($stats));
-
+    $stats = $conn->query($query)->fetch(PDO::FETCH_ASSOC);
+    
     // Hitung savings rate
-    $savingsRate = 0;
-    if ($stats['period_income'] > 0) {
-        $savingsRate = ($stats['period_savings'] / $stats['period_income']) * 100;
-    }
+    $savingsRate = $stats['period_income'] > 0 ? 
+        ($stats['period_savings'] / $stats['period_income'] * 100) : 0;
 
     echo json_encode([
         'success' => true,
@@ -103,9 +76,10 @@ try {
         'period_expenses' => floatval($stats['period_expenses']),
         'savings_amount' => floatval($stats['period_savings']),
         'savings_rate' => round($savingsRate, 1),
-        'last_update' => $stats['last_update'],
-        'last_income_update' => $stats['last_income_update'],
-        'last_expense_update' => $stats['last_expense_update']
+        // Kirim null jika tidak ada data
+        'last_update' => $stats['last_update'] ?: null,
+        'last_income_update' => $stats['last_income_update'] ?: null,
+        'last_expense_update' => $stats['last_expense_update'] ?: null
     ]);
 
 } catch(Exception $e) {
@@ -115,3 +89,4 @@ try {
         'error' => $e->getMessage()
     ]);
 }
+
