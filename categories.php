@@ -3,22 +3,18 @@ require_once 'config/database.php';
 $db = new Database();
 $conn = $db->getConnection();
 
-// Modifikasi query delete
+// Handle delete (soft/hard)
 if (isset($_POST['delete'])) {
     try {
         $id = $_POST['id'];
         $type = $_POST['type'];
         
         if ($type === 'income') {
-            // Cek apakah source digunakan di transaksi
             $checkQuery = "SELECT COUNT(*) FROM transactions WHERE income_source_id = ? AND status = 'completed'";
             $table = "income_sources";
-            $idField = "income_source_id";
         } else {
-            // Cek apakah kategori digunakan di transaksi
             $checkQuery = "SELECT COUNT(*) FROM transactions WHERE expense_category_id = ? AND status = 'completed'";
             $table = "expense_categories";
-            $idField = "expense_category_id";
         }
 
         $stmt = $conn->prepare($checkQuery);
@@ -26,22 +22,20 @@ if (isset($_POST['delete'])) {
         $usageCount = $stmt->fetchColumn();
 
         if ($usageCount > 0) {
-            // Jika sudah digunakan, lakukan soft delete
+            // Soft delete
             $query = "UPDATE $table SET is_active = FALSE WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->execute([$id]);
-            
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
                 'message' => 'Successfully deactivated'
             ]);
         } else {
-            // Jika belum digunakan, boleh hard delete
+            // Hard delete
             $query = "DELETE FROM $table WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->execute([$id]);
-            
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
@@ -59,19 +53,17 @@ if (isset($_POST['delete'])) {
     }
 }
 
-// Perbaiki fungsi add
+// Handle add
 if (isset($_POST['add'])) {
     try {
         $name = trim($_POST['name']);
         $type = $_POST['type'];
         $description = trim($_POST['description'] ?? '');
 
-        // Validasi nama tidak boleh kosong
         if (empty($name)) {
             throw new Exception('Name is required');
         }
 
-        // Cek duplikasi nama
         if ($type === 'income') {
             $checkQuery = "SELECT COUNT(*) FROM income_sources WHERE source_name = ? AND is_active = TRUE";
             $insertQuery = "INSERT INTO income_sources (source_name, description) VALUES (?, ?)";
@@ -80,14 +72,12 @@ if (isset($_POST['add'])) {
             $insertQuery = "INSERT INTO expense_categories (category_name, description) VALUES (?, ?)";
         }
 
-        // Cek duplikasi
         $stmt = $conn->prepare($checkQuery);
         $stmt->execute([$name]);
         if ($stmt->fetchColumn() > 0) {
             throw new Exception('Name already exists');
         }
 
-        // Insert data baru
         $stmt = $conn->prepare($insertQuery);
         $success = $stmt->execute([$name, $description]);
 
@@ -100,7 +90,6 @@ if (isset($_POST['add'])) {
         } else {
             throw new Exception('Failed to add');
         }
-        
     } catch(Exception $e) {
         header('Content-Type: application/json');
         echo json_encode([
@@ -211,13 +200,11 @@ function confirmDelete(id, type, name) {
         cancelButtonText: 'Cancel'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Create form data
             const formData = new FormData();
             formData.append('delete', '1');
             formData.append('id', id);
             formData.append('type', type);
 
-            // Send delete request
             fetch('categories.php', {
                 method: 'POST',
                 body: formData
@@ -304,12 +291,6 @@ function addItem(type) {
         Swal.fire('Error', error.message, 'error');
     });
 }
-
-// Initialize form handlers
-document.addEventListener('DOMContentLoaded', () => {
-    handleFormSubmit('addSourceForm', 'Income Source');
-    handleFormSubmit('addCategoryForm', 'Expense Category');
-});
 </script>
 
 <?php
