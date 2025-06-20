@@ -2,16 +2,15 @@
 Update Terakhir: 19 Juni 2025 4:30pm
 
 ## 📝 Pembaruan Terbaru
-- 📊 Perbaikan tampilan Monthly Comparison Table (Jan-Dec)
-- 🎯 Optimasi vertikal alignment pada badge status
-- 💫 Konsistensi tampilan status Surplus/Deficit
-- 🔄 Pembaruan logika perhitungan net balance bulanan
-- 📈 Penambahan row total pada monthly comparison
-- ⚡ Optimasi query untuk data bulanan
-- 🎨 Penyesuaian style tabel monthly comparison
-- 🔧 Perbaikan padding dan alignment pada cells
-- ✨ Peningkatan visual badge status transaksi
-- 📊 Penambahan status Surplus/Deficit per bulan
+- 🟢 Perbaikan logika badge status Surplus/Deficit/Break Even/No Data pada Monthly Comparison Table
+- 🟣 Validasi savings target: jika input melebihi kekurangan target, hanya kekurangannya yang masuk ke target
+- 🟡 Export Excel hanya menampilkan data yang ada di database, judul dan emoji tetap cantik
+- 🔵 Perbaikan tampilan dan logika timestamp dashboard (tampil "No transactions yet" jika kosong)
+- 🟠 Perbaikan query dan tampilan dashboard stats (income/expense/savings per periode)
+- 🟤 Konsistensi format currency dan animasi progress bar
+- ⚡ Optimasi query dan pengelolaan kategori (soft/hard delete)
+- 🟤 Perbaikan validasi form transaksi dan savings
+- 🟢 Penambahan dan perbaikan style badge, alignment, dan tabel
 
 <div align="center">
   
@@ -39,12 +38,15 @@ Update Terakhir: 19 Juni 2025 4:30pm
 MoneyFlow dibuat untuk membantu mencatat dan menganalisa keuangan pribadi dengan mudah. Aplikasi ini lahir dari kesulitan mencari aplikasi pencatat keuangan yang simpel namun tetap informatif.
 
 ### ✨ Fitur Utama
-- 📊 Dashboard keuangan realtime
+- 📊 Dashboard keuangan realtime (periode harian, mingguan, bulanan, tahunan)
 - 💰 Catat pemasukan & pengeluaran 
-- 🎯 Target & goals keuangan  
-- 📈 Analisis cashflow
-- 💾 Export laporan Excel
+- 🎯 Target & goals keuangan dengan validasi cerdas
+- 📈 Analisis cashflow & breakdown kategori
+- 💾 Export laporan Excel (hanya data yang ada di database, judul & emoji tetap cantik)
 - 📱 Tampilan responsif
+- 🟢 Badge status Surplus/Deficit/Break Even/No Data pada tabel laporan
+- 🟣 Validasi savings target otomatis
+- 🔄 Soft/hard delete kategori otomatis sesuai penggunaan
 
 ## 🛠️ Teknologi yang Digunakan
 - PHP 7.4+
@@ -81,7 +83,7 @@ composer install
 
 ### Dashboard
 - Lihat ringkasan keuangan
-- Pantau cashflow harian/mingguan/bulanan
+- Pantau cashflow harian/mingguan/bulanan/tahunan
 - Analisis pengeluaran per kategori
 
 ### Transaksi
@@ -92,12 +94,12 @@ composer install
 ### Target Keuangan 
 - Buat target tabungan
 - Set target nominal
-- Monitor progres
+- Monitor progres (otomatis validasi jika input melebihi target)
 
 ### Laporan
 - Pilih periode laporan
-- Export ke Excel
-- Lihat grafik analisis
+- Export ke Excel (hanya data yang ada di database)
+- Lihat grafik analisis & badge status per bulan
 
 ##
 
