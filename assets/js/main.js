@@ -429,172 +429,139 @@ function updateTimestamp() {
     });
 }
 
+function timeAgo(date) {
+    if (!date) return 'No transactions yet';
+    
+    try {
+        const now = new Date();
+        const past = new Date(date);
+        
+        if (isNaN(past.getTime())) {
+            return 'Invalid date';
+        }
+        
+        const seconds = Math.floor((now - past) / 1000);
+        
+        if (seconds < 10) return 'just now';
+        if (seconds < 60) return `${seconds} seconds ago`;
+        
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+        
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+        
+        const days = Math.floor(hours / 24);
+        if (days < 30) return `${days} day${days !== 1 ? 's' : ''} ago`;
+        
+        return past.toLocaleDateString('id-ID');
+    } catch (error) {
+        console.error('Error parsing date:', error);
+        return 'Invalid date format';
+    }
+}
+
+function updateTimestamps(timestamps) {
+    Object.entries(timestamps).forEach(([id, time]) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.dataset.time = time || '';
+            el.textContent = timeAgo(time);
+            // Tambah class untuk styling
+            el.className = time ? 'text-white-50' : 'text-warning';
+        }
+    });
+}
+
 async function loadDashboardStats(period) {
     try {
+        showLoading();
         const response = await fetch(`api/dashboard_stats.php?period=${period}`);
         const data = await response.json();
         
         if (data.success) {
-            // Update total balance
-            document.getElementById('totalBalance').textContent = formatCurrency(data.total_balance);
-
-            // Update timestamps
-            const updateElements = {
-                'lastUpdate': data.last_update,
-                'lastIncomeUpdate': data.last_income_update,
-                'lastExpenseUpdate': data.last_expense_update
-            };
-
-            Object.entries(updateElements).forEach(([id, time]) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.dataset.time = time;
-                }
-            });
-
-            updateTimestamp();  // Call immediately after setting data-time
-
             // Update period labels
             document.querySelectorAll('.periodLabel').forEach(el => {
                 el.textContent = data.label;
             });
 
-            // Update stats values
-            document.getElementById('periodIncome').textContent = formatCurrency(data.period_income);
-            document.getElementById('periodExpenses').textContent = formatCurrency(data.period_expenses);
+            // Update values with animation
+            animateValue('totalBalance', data.total_balance);
+            animateValue('periodIncome', data.period_income);
+            animateValue('periodExpenses', data.period_expenses);
 
-            // Update savings rate with warning theme
-            document.getElementById('savingsRate').textContent = `${data.savings_rate}%`;
+            // Update savings rate
+            const savingsRate = data.savings_rate;
+            const savingsRateEl = document.getElementById('savingsRate');
+            if (savingsRateEl) {
+                savingsRateEl.textContent = `${savingsRate}%`;
+            }
 
-            // Update savings progress bar dengan warna warning theme
+            // Update progress bar
             const progressBar = document.getElementById('savingsProgress');
             if (progressBar) {
-                const width = Math.min(100, data.savings_rate);
+                const width = Math.min(100, savingsRate);
+                progressBar.style.transition = 'width 0.5s ease-in-out';
                 progressBar.style.width = `${width}%`;
                 progressBar.setAttribute('aria-valuenow', width);
-                // Sesuaikan dengan warna card (warning theme)
-                progressBar.className = 'progress-bar bg-secondary';
             }
+
+            // Update timestamps dengan nilai default jika kosong
+            updateTimestamps({
+                'lastUpdate': data.last_update || null,
+                'lastIncomeUpdate': data.last_income_update || null,
+                'lastExpenseUpdate': data.last_expense_update || null
+            });
         }
     } catch (error) {
         console.error('Error loading dashboard stats:', error);
+        // Update timestamps dengan null untuk menampilkan pesan default
+        updateTimestamps({
+            'lastUpdate': null,
+            'lastIncomeUpdate': null,
+            'lastExpenseUpdate': null
+        });
+    } finally {
+        hideLoading();
     }
 }
 
-function timeAgo(date) {
-    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-    
-    if (seconds < 5) return 'just now';
-    if (seconds < 60) return `${seconds} seconds ago`;
-    
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    
-    return new Date(date).toLocaleDateString('en-US', { 
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
+// Helper function untuk animasi nilai
+function animateValue(elementId, value) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
 
-async function loadMonthlyComparison() {
-    try {
-        const response = await fetch('api/chart-data.php?type=monthly_comparison');
-        const data = await response.json();
-        console.log('Monthly comparison data:', data); // Debug
-
-        if (data.success && data.monthly_comparison) {
-            const ctx = document.getElementById('monthlyComparisonChart');
-            if (!ctx) {
-                console.error('Monthly comparison chart canvas not found');
-                return;
-            }
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.monthly_comparison.months,
-                    datasets: [
-                        {
-                            label: 'Income',
-                            data: data.monthly_comparison.income,
-                            backgroundColor: CHART_COLORS.income.background,
-                            borderColor: CHART_COLORS.income.border,
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Expenses',
-                            data: data.monthly_comparison.expense,
-                            backgroundColor: CHART_COLORS.expense.background,
-                            borderColor: CHART_COLORS.expense.border,
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: value => formatCurrency(value)
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Update table if exists
-            updateMonthlyTable(data.monthly_comparison);
+    const start = parseFloat(el.textContent.replace(/[^\d.-]/g, '')) || 0;
+    const duration = 1000;
+    const increment = (value - start) / (duration / 16);
+    
+    let current = start;
+    const animate = () => {
+        current += increment;
+        const finished = increment > 0 ? current >= value : current <= value;
+        
+        if (finished) {
+            el.textContent = formatCurrency(value);
+        } else {
+            el.textContent = formatCurrency(current);
+            requestAnimationFrame(animate);
         }
-    } catch (error) {
-        console.error('Error loading monthly comparison:', error);
-    }
+    };
+    
+    animate();
 }
 
-function updateMonthlyTable(data) {
-    const table = document.getElementById('monthlyComparisonTable');
-    if (!table) return;
+// Update UI saat periode berubah
+document.querySelector('.period-selector')?.addEventListener('click', function(e) {
+    const button = e.target.closest('[data-period]');
+    if (!button) return;
 
-    const tbody = table.querySelector('tbody');
-    if (!tbody) return;
-
-    tbody.innerHTML = data.months.map((month, i) => `
-        <tr>
-            <td>${month}</td>
-            <td class="text-end">${formatCurrency(data.income[i])}</td>
-            <td class="text-end">${formatCurrency(data.expense[i])}</td>
-            <td class="text-end ${data.net[i] >= 0 ? 'text-success' : 'text-danger'}">
-                ${formatCurrency(data.net[i])}
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Pastikan fungsi ini dipanggil saat halaman dimuat
-document.addEventListener('DOMContentLoaded', function() {
-    // ...existing initialization code...
+    // Update active state
+    this.querySelectorAll('[data-period]').forEach(btn => 
+        btn.classList.remove('active'));
+    button.classList.add('active');
     
-    // Tambahkan pemanggilan loadSavingsData
-    loadSavingsData();
-    
-    // Refresh savings data setiap 30 detik
-    setInterval(loadSavingsData, 30000);
-
-    loadRecentTransactions(); // Add this line to load transactions on page load
+    // Load data untuk periode yang dipilih
+    loadDashboardStats(button.dataset.period);
+    loadChartData(button.dataset.period);
 });
