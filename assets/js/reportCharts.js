@@ -85,51 +85,6 @@ async function loadReportData() {
                 }
             });
 
-            // Update table
-            const tbody = document.getElementById('monthlyStatsBody');
-            if (tbody) {
-                let totalIncome = 0;
-                let totalExpense = 0;
-
-                tbody.innerHTML = chartData.months.map((month, i) => {
-                    const income = chartData.income[i];
-                    const expense = chartData.expense[i];
-                    const net = chartData.net[i];
-
-                    totalIncome += income;
-                    totalExpense += expense;
-
-                    return `
-                        <tr>
-                            <td>${month}</td>
-                            <td class="text-end">${formatCurrency(income)}</td>
-                            <td class="text-end">${formatCurrency(expense)}</td>
-                            <td class="text-end ${net >= 0 ? 'text-success' : 'text-danger'}">
-                                ${formatCurrency(net)}
-                            </td>
-                            <td class="text-center">
-                                <span class="badge bg-${net >= 0 ? 'success' : 'danger'}">
-                                    ${net >= 0 ? 'Surplus' : 'Deficit'}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-
-                // Add totals row
-                const totalNet = totalIncome - totalExpense;
-                tbody.innerHTML += `
-                    <tr class="table-light fw-bold">
-                        <td>TOTAL</td>
-                        <td class="text-end">${formatCurrency(totalIncome)}</td>
-                        <td class="text-end">${formatCurrency(totalExpense)}</td>
-                        <td class="text-end ${totalNet >= 0 ? 'text-success' : 'text-danger'}">
-                            ${formatCurrency(totalNet)}
-                        </td>
-                        <td></td>
-                    </tr>
-                `;
-            }
         }
     } catch (error) {
         console.error('Error:', error);
