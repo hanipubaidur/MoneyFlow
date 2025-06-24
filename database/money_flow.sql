@@ -2,6 +2,24 @@ DROP DATABASE IF EXISTS money_flow;
 CREATE DATABASE money_flow;
 USE money_flow;
 
+-- Table for accounts (bank, e-wallet, cash, etc)
+CREATE TABLE accounts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    account_name VARCHAR(100) NOT NULL,
+    account_type ENUM('bank', 'e-wallet', 'cash', 'other') NOT NULL DEFAULT 'cash',
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default accounts
+INSERT INTO accounts (account_name, account_type, description) VALUES
+('Cash', 'cash', 'Uang tunai'),
+('BCA', 'bank', 'Bank Central Asia'),
+('Mandiri', 'bank', 'Bank Mandiri'),
+('OVO', 'e-wallet', 'Dompet digital OVO'),
+('Gopay', 'e-wallet', 'Dompet digital Gopay');
+
 -- Create balance tracking table first
 CREATE TABLE balance_tracking (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -48,7 +66,7 @@ CREATE TABLE savings_targets (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Transactions table dengan struktur yang disederhanakan
+-- Transactions table with account_id (asal/tujuan uang)
 CREATE TABLE transactions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     type ENUM('income', 'expense') NOT NULL,
@@ -57,12 +75,13 @@ CREATE TABLE transactions (
     description TEXT,
     income_source_id INT NULL,
     expense_category_id INT NULL,
-    payment_method ENUM('cash', 'debit', 'credit', 'e-wallet') DEFAULT 'cash',
+    account_id INT NULL, -- NEW: Asal/tujuan uang (bank, e-wallet, cash)
     status ENUM('completed', 'pending', 'cancelled', 'deleted') DEFAULT 'completed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     savings_type ENUM('general', 'targeted') DEFAULT 'general',
     FOREIGN KEY (income_source_id) REFERENCES income_sources(id) ON DELETE SET NULL,
-    FOREIGN KEY (expense_category_id) REFERENCES expense_categories(id) ON DELETE SET NULL
+    FOREIGN KEY (expense_category_id) REFERENCES expense_categories(id) ON DELETE SET NULL,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
 );
 
 -- Monthly category summaries
