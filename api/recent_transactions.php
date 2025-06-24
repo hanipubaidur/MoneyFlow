@@ -11,14 +11,17 @@ try {
                 DATE_FORMAT(t.date, '%d %b %Y') as date,
                 t.type,
                 t.amount,
+                t.account_id,
                 t.description,
                 CASE 
                     WHEN t.type = 'income' THEN i.source_name
                     ELSE e.category_name
-                END as category
+                END as category,
+                a.account_name
               FROM transactions t
               LEFT JOIN income_sources i ON t.income_source_id = i.id
               LEFT JOIN expense_categories e ON t.expense_category_id = e.id
+              LEFT JOIN accounts a ON t.account_id = a.id
               WHERE t.status = 'completed'
               ORDER BY t.date DESC, t.id DESC
               LIMIT 5";
