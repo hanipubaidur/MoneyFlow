@@ -17,10 +17,14 @@ try {
                     WHEN t.type = 'income' THEN i.source_name
                     ELSE e.category_name
                 END as category,
-                t.savings_type
+                t.savings_type,
+                t.account_id,
+                a.account_name,
+                a.account_type
               FROM transactions t
               LEFT JOIN income_sources i ON t.income_source_id = i.id
               LEFT JOIN expense_categories e ON t.expense_category_id = e.id
+              LEFT JOIN accounts a ON t.account_id = a.id
               WHERE t.status != 'deleted'
               ORDER BY t.date DESC, t.id DESC";
 
