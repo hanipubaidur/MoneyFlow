@@ -88,7 +88,7 @@ async function loadTransactions() {
         if (!Array.isArray(transactions) || transactions.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center text-muted">
+                    <td colspan="7" class="text-center text-muted">
                         No transactions found
                     </td>
                 </tr>`;
@@ -103,9 +103,16 @@ async function loadTransactions() {
                     ${t.type}
                 </td>
                 <td>${t.category}</td>
-                <td class="text-end ${t.type === 'income' ? 'text-success' : 'text-danger'}">
+                <td class="${t.type === 'income' ? 'text-success' : 'text-danger'}">
                     ${t.type === 'income' ? '+' : '-'} 
                     ${new Intl.NumberFormat('id-ID').format(t.amount)}
+                </td>
+                <td>
+                    ${
+                        t.account_name
+                            ? `${t.account_name}${t.account_type ? ' (' + capitalize(t.account_type) + ')' : ''}`
+                            : '-'
+                    }
                 </td>
                 <td>${t.description || '-'}</td>
                 <td>
@@ -122,6 +129,12 @@ async function loadTransactions() {
         console.error('Error loading transactions:', error);
         Swal.fire('Error', 'Failed to load transactions', 'error');
     }
+}
+
+// Tambahkan fungsi helper untuk kapitalisasi tipe akun
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 // Add event listener to load transactions when page loads
@@ -145,6 +158,7 @@ function editTransaction(id) {
             // Set form values
             form.querySelector('[name="type"]').value = data.type;
             form.querySelector('[name="amount"]').value = data.amount;
+            form.querySelector('[name="account_id"]').value = data.account_id || '';
             form.querySelector('[name="date"]').value = data.date;
             form.querySelector('[name="description"]').value = data.description || '';
 
@@ -154,6 +168,11 @@ function editTransaction(id) {
             // Set correct category option
             const categoryValue = `${data.type}_${data.type === 'income' ? data.income_source_id : data.expense_category_id}`;
             form.querySelector('[name="category"]').value = categoryValue;
+
+            // Set account
+            if (form.querySelector('[name="account_id"]')) {
+                form.querySelector('[name="account_id"]').value = data.account_id || '';
+            }
 
             // Add transaction ID for update
             if (!form.querySelector('[name="transaction_id"]')) {
@@ -286,8 +305,7 @@ function updateExpenseChart(data) {
                 borderWidth: 1
             }]
         },
-        // ...rest of existing code...
+
     });
     
-    // ...rest of existing code...
 }
