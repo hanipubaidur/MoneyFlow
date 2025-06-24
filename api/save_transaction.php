@@ -12,6 +12,7 @@ try {
     $date = $_POST['date'];
     $description = $_POST['description'];
     $category = $_POST['category'];
+    $account_id = $_POST['account_id'] ?? null;
 
     // Parse category value (format: type_id)
     list($categoryType, $categoryId) = explode('_', $category);
@@ -38,17 +39,17 @@ try {
         if (isset($_POST['transaction_id'])) {
             $query = "UPDATE transactions 
                      SET type = ?, amount = ?, date = ?, description = ?,
-                         $sourceColumn = ?, savings_type = ?
+                         $sourceColumn = ?, savings_type = ?, account_id = ?
                      WHERE id = ?";
             $params = [$type, $amount, $date, $description, $categoryId, 
-                      $savingsType, $_POST['transaction_id']];
+                      $savingsType, $account_id, $_POST['transaction_id']];
         } else {
             $query = "INSERT INTO transactions 
                      (type, amount, date, description, $sourceColumn, 
-                      savings_type, status) 
-                     VALUES (?, ?, ?, ?, ?, ?, 'completed')";
+                      savings_type, status, account_id) 
+                     VALUES (?, ?, ?, ?, ?, ?, 'completed', ?)";
             $params = [$type, $amount, $date, $description, $categoryId, 
-                      $savingsType];
+                      $savingsType, $account_id];
         }
 
         $stmt = $conn->prepare($query);
