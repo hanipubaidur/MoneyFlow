@@ -13,6 +13,9 @@ try {
     $income_sources = $conn->query($income_query)->fetchAll(PDO::FETCH_ASSOC);
     $expense_categories = $conn->query($expense_query)->fetchAll(PDO::FETCH_ASSOC);
 
+    // Get active accounts
+    $accounts_query = "SELECT * FROM accounts WHERE is_active = TRUE ORDER BY account_type, account_name";
+    $accounts = $conn->query($accounts_query)->fetchAll(PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
@@ -70,6 +73,17 @@ ob_start();
                             <span class="input-group-text">Rp</span>
                             <input type="number" class="form-control" name="amount" required>
                         </div>
+                    </div>
+                    <!-- NEW: Account selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Account (Source/Destination)</label>
+                        <select class="form-select" name="account_id" id="accountSelect" required>
+                            <?php foreach($accounts as $acc): ?>
+                                <option value="<?= $acc['id'] ?>">
+                                    <?= htmlspecialchars($acc['account_name']) ?> (<?= ucfirst($acc['account_type']) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -130,6 +144,7 @@ ob_start();
                         <th>Type</th>
                         <th>Category</th>
                         <th>Amount</th>
+                        <th>Account</th>
                         <th>Description</th>
                         <th>Actions</th>
                     </tr>
