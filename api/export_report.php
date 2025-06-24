@@ -427,7 +427,7 @@ try {
     ]);
 
     // PERBAIKAN 1: Definisi headers yang hilang
-    $transHeaders = ['📅 Date', '🔄 Type', '📂 Category', '💰 Amount', '📝 Description'];
+    $transHeaders = ['📅 Date', '🔄 Type', '📂 Category', '💰 Amount', '🏦 Account', '📝 Description'];
 
     // Column headers styling
     foreach($transHeaders as $i => $header) {
@@ -436,7 +436,7 @@ try {
         $transactions->getColumnDimension($col)->setAutoSize(true);
     }
 
-    $transactions->getStyle('A3:E3')->applyFromArray([
+    $transactions->getStyle('A3:F3')->applyFromArray([
         'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $theme['accent']]],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -445,10 +445,12 @@ try {
 
     $transQuery = "SELECT 
         t.id, t.date, t.type, t.amount, t.description,
-        CASE WHEN t.type = 'income' THEN i.source_name ELSE e.category_name END as category
+        CASE WHEN t.type = 'income' THEN i.source_name ELSE e.category_name END as category,
+        a.account_name
         FROM transactions t
         LEFT JOIN income_sources i ON t.income_source_id = i.id
         LEFT JOIN expense_categories e ON t.expense_category_id = e.id
+        LEFT JOIN accounts a ON t.account_id = a.id
         WHERE t.status != 'deleted'
         ORDER BY t.date DESC, t.id DESC
         LIMIT 500";
@@ -478,7 +480,8 @@ try {
             ['B', $typeEmoji . ' ' . ucfirst($t['type']), Alignment::HORIZONTAL_CENTER],
             ['C', $t['category'] ?: '-', Alignment::HORIZONTAL_LEFT],
             ['D', $amount, Alignment::HORIZONTAL_RIGHT],
-            ['E', $t['description'] ?: '-', Alignment::HORIZONTAL_LEFT]
+            ['E', $t['account_name'] ?: '-', Alignment::HORIZONTAL_LEFT],
+            ['F', $t['description'] ?: '-', Alignment::HORIZONTAL_LEFT]
         ];
 
         // Set values and styling for each cell
