@@ -393,6 +393,8 @@ async function loadRecentTransactions() {
                             ${t.category}
                         </h6>
                         <small class="text-muted">${t.date}</small>
+                        <br>
+                        <small class="text-muted"><b>${t.account_name ? 'Account: ' + t.account_name : ''}</b></small>
                     </div>
                     <div class="text-end">
                         <h6 class="mb-1 ${t.type === 'income' ? 'text-success' : 'text-danger'}">
