@@ -3,15 +3,14 @@
 ![Last Commit](https://img.shields.io/github/last-commit/hanipubaidur/MoneyFlow?style=flat-square)
 
 ## 📝 Pembaruan Terbaru
-- 🟢 Perbaikan logika badge status Surplus/Deficit/Break Even/No Data pada Monthly Comparison Table
-- 🟣 Validasi savings target: jika input melebihi kekurangan target, hanya kekurangannya yang masuk ke target
-- 🟡 Export Excel hanya menampilkan data yang ada di database, judul dan emoji tetap cantik
-- 🔵 Perbaikan tampilan dan logika timestamp dashboard (tampil "No transactions yet" jika kosong)
-- 🟠 Perbaikan query dan tampilan dashboard stats (income/expense/savings per periode)
-- 🟤 Konsistensi format currency dan animasi progress bar
-- ⚡ Optimasi query dan pengelolaan kategori (soft/hard delete)
-- 🟤 Perbaikan validasi form transaksi dan savings
-- 🟢 Penambahan dan perbaikan style badge, alignment, dan tabel
+- 🟢 Kolom "Account" (asal/tujuan uang) sekarang tampil di semua transaksi & export
+- 🟣 Tampilan kategori, sumber income, dan akun kini lebih rapi & bisa edit langsung
+- 🟡 Validasi savings target: input melebihi kekurangan target hanya masuk kekurangannya
+- 🔵 Export Excel: data transaksi lengkap (account, keterangan, dsb) & summary otomatis
+- 🟠 Dashboard: breakdown cashflow, expense, dan badge status lebih informatif
+- 🟤 Soft/hard delete kategori & akun otomatis sesuai penggunaan
+- 🟤 Perbaikan validasi form transaksi, savings, dan animasi progress bar
+- 🟢 Responsive, UI tabel & list lebih rapih (kategori, akun, transaksi, dsb)
 
 <div align="center">
   
@@ -40,14 +39,14 @@ MoneyFlow dibuat untuk membantu mencatat dan menganalisa keuangan pribadi dengan
 
 ### ✨ Fitur Utama
 - 📊 Dashboard keuangan realtime (periode harian, mingguan, bulanan, tahunan)
-- 💰 Catat pemasukan & pengeluaran 
+- 💰 Catat pemasukan & pengeluaran, pilih sumber/kategori & akun (bank, e-wallet, cash)
+- 🏦 Manajemen akun (bank, e-wallet, cash) & bisa edit/hapus
 - 🎯 Target & goals keuangan dengan validasi cerdas
-- 📈 Analisis cashflow & breakdown kategori
-- 💾 Export laporan Excel (hanya data yang ada di database, judul & emoji tetap cantik)
-- 📱 Tampilan responsif
-- 🟢 Badge status Surplus/Deficit/Break Even/No Data pada tabel laporan
-- 🟣 Validasi savings target otomatis
-- 🔄 Soft/hard delete kategori otomatis sesuai penggunaan
+- 📈 Analisis cashflow & breakdown kategori, badge status otomatis
+- 💾 Export laporan Excel (data lengkap: account, keterangan, dsb)
+- 📝 Edit/hapus kategori, sumber income, dan akun langsung dari halaman kategori
+- 📱 Tampilan responsif & tabel/list lebih rapih
+- 🔄 Soft/hard delete kategori & akun otomatis sesuai penggunaan
 
 ## 🛠️ Teknologi yang Digunakan
 - PHP 7.4+
@@ -85,11 +84,11 @@ composer install
 ### Dashboard
 - Lihat ringkasan keuangan
 - Pantau cashflow harian/mingguan/bulanan/tahunan
-- Analisis pengeluaran per kategori
+- Analisis pengeluaran per kategori & akun
 
 ### Transaksi
 - Catat pemasukan/pengeluaran
-- Pilih kategori transaksi 
+- Pilih kategori, sumber, dan akun (bank/e-wallet/cash)
 - Input nominal & keterangan
 
 ### Target Keuangan 
@@ -97,9 +96,13 @@ composer install
 - Set target nominal
 - Monitor progres (otomatis validasi jika input melebihi target)
 
+### Kategori, Sumber, Akun
+- Tambah/edit/hapus kategori pengeluaran, sumber income, dan akun
+- Semua list tampil rapi, bisa edit langsung tanpa reload halaman
+
 ### Laporan
 - Pilih periode laporan
-- Export ke Excel (hanya data yang ada di database)
+- Export ke Excel (data lengkap, summary, badge status)
 - Lihat grafik analisis & badge status per bulan
 
 ##
