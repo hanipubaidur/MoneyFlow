@@ -39,13 +39,15 @@ ob_start();
                                 <select class="form-select" name="type" id="transactionType" required>
                                     <option value="income">Income</option>
                                     <option value="expense">Expense</option>
+                                    <option value="transfer">Transfer</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <!-- Source/Category for income/expense, Transfer From/To for transfer -->
+                            <div class="mb-3" id="categorySection">
                                 <label class="form-label" id="categoryLabel">Source/Category</label>
-                                <select class="form-select" name="category" required>
+                                <select class="form-select" name="category" id="categorySelect" required>
                                     <!-- Income Sources -->
                                     <optgroup label="Income Sources" id="incomeSourceGroup">
                                     <?php foreach($income_sources as $source): ?>
@@ -54,7 +56,6 @@ ob_start();
                                         </option>
                                     <?php endforeach; ?>
                                     </optgroup>
-                                    
                                     <!-- Expense Categories -->
                                     <optgroup label="Expense Categories" id="expenseCategoryGroup" style="display:none;">
                                     <?php foreach($expense_categories as $category): ?>
@@ -63,6 +64,25 @@ ob_start();
                                         </option>
                                     <?php endforeach; ?>
                                     </optgroup>
+                                </select>
+                            </div>
+                            <!-- Transfer From/To (hidden by default) -->
+                            <div class="mb-3" id="transferSection" style="display:none;">
+                                <label class="form-label">Transfer From</label>
+                                <select class="form-select" name="transfer_from" id="transferFromSelect">
+                                    <?php foreach($accounts as $acc): ?>
+                                        <option value="<?= $acc['id'] ?>">
+                                            <?= htmlspecialchars($acc['account_name']) ?> (<?= ucfirst($acc['account_type']) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <label class="form-label mt-2">Transfer To</label>
+                                <select class="form-select" name="transfer_to" id="transferToSelect">
+                                    <?php foreach($accounts as $acc): ?>
+                                        <option value="<?= $acc['id'] ?>">
+                                            <?= htmlspecialchars($acc['account_name']) ?> (<?= ucfirst($acc['account_type']) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
@@ -74,8 +94,8 @@ ob_start();
                             <input type="number" class="form-control" name="amount" required>
                         </div>
                     </div>
-                    <!-- NEW: Account selection -->
-                    <div class="mb-3">
+                    <!-- Account selection (hide if transfer) -->
+                    <div class="mb-3" id="accountSection">
                         <label class="form-label">Account (Source/Destination)</label>
                         <select class="form-select" name="account_id" id="accountSelect" required>
                             <?php foreach($accounts as $acc): ?>
