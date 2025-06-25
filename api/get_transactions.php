@@ -6,6 +6,7 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
 
+    // Ambil semua transaksi, deteksi transfer (income/expense tanpa kategori/source, tapi ada account_id)
     $query = "SELECT 
                 t.id,
                 t.date,
@@ -14,6 +15,8 @@ try {
                 t.description,
                 t.status,
                 CASE 
+                    WHEN t.type = 'income' AND t.income_source_id IS NULL AND t.expense_category_id IS NULL THEN 'transfer_in'
+                    WHEN t.type = 'expense' AND t.income_source_id IS NULL AND t.expense_category_id IS NULL THEN 'transfer_out'
                     WHEN t.type = 'income' THEN i.source_name
                     ELSE e.category_name
                 END as category,
@@ -30,7 +33,46 @@ try {
 
     $stmt = $conn->prepare($query);
     $stmt->execute();
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Gabungkan transfer_out dan transfer_in yang berpasangan (by amount, date, description)
+    $result = [];
+    $transfer_pairs = [];
+    foreach ($rows as $row) {
+        if ($row['category'] === 'transfer_out') {
+            // Cari pasangan transfer_in
+            foreach ($rows as $row2) {
+                if (
+                    $row2['category'] === 'transfer_in' &&
+                    $row2['amount'] == $row['amount'] &&
+                    $row2['date'] == $row['date'] &&
+                    $row2['description'] == $row['description'] &&
+                    $row2['id'] != $row['id'] &&
+                    !isset($transfer_pairs[$row2['id']]) &&
+                    !isset($transfer_pairs[$row['id']])
+                ) {
+                    $result[] = [
+                        'id' => $row['id'],
+                        'date' => $row['date'],
+                        'type' => 'transfer',
+                        'amount' => $row['amount'],
+                        'description' => $row['description'],
+                        'status' => $row['status'],
+                        'category' => 'Transfer: ' . ($row['account_name'] ?: '-') . ' → ' . ($row2['account_name'] ?: '-'),
+                        'account_name' => null,
+                        'account_type' => null
+                    ];
+                    $transfer_pairs[$row['id']] = true;
+                    $transfer_pairs[$row2['id']] = true;
+                    break;
+                }
+            }
+        } elseif ($row['category'] !== 'transfer_in') {
+            $result[] = $row;
+        }
+    }
+
+    echo json_encode($result);
 
 } catch(PDOException $e) {
     error_log('Get Transactions Error: ' . $e->getMessage());
