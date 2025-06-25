@@ -11,6 +11,7 @@
 - 🟤 Soft/hard delete kategori & akun otomatis sesuai penggunaan
 - 🟤 Perbaikan validasi form transaksi, savings, dan animasi progress bar
 - 🟢 Responsive, UI tabel & list lebih rapih (kategori, akun, transaksi, dsb)
+- 🟣 **Laporan: breakdown tabel income/expense kini menampilkan pesan jika data kosong dan total tetap muncul di footer**
 
 <div align="center">
   
@@ -47,6 +48,7 @@ MoneyFlow dibuat untuk membantu mencatat dan menganalisa keuangan pribadi dengan
 - 📝 Edit/hapus kategori, sumber income, dan akun langsung dari halaman kategori
 - 📱 Tampilan responsif & tabel/list lebih rapih
 - 🔄 Soft/hard delete kategori & akun otomatis sesuai penggunaan
+- 🟣 **Breakdown laporan income/expense tampilkan pesan jika data kosong & total tetap muncul di footer**
 
 ## 🛠️ Teknologi yang Digunakan
 - PHP 7.4+
