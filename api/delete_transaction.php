@@ -5,83 +5,50 @@ header('Content-Type: application/json');
 try {
     $db = new Database();
     $conn = $db->getConnection();
-    
+
+    // Ambil ID dari GET atau DELETE body
+    $id = $_GET['id'] ?? null;
+    if (!$id) throw new Exception('Missing transaction ID');
+
+    // Ambil data transaksi
+    $stmt = $conn->prepare("SELECT * FROM transactions WHERE id = ?");
+    $stmt->execute([$id]);
+    $trx = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$trx) throw new Exception('Transaction not found');
+
     $conn->beginTransaction();
 
-    $id = $_GET['id'] ?? null;
-    if (!$id) {
-        throw new Exception('Transaction ID is required');
-    }
+    // Deteksi transfer (income/expense tanpa kategori/source)
+    $isTransfer = (
+        ($trx['type'] === 'income' || $trx['type'] === 'expense') &&
+        is_null($trx['income_source_id']) &&
+        is_null($trx['expense_category_id'])
+    );
 
-    // Get transaction details first for rollback purposes
-    $stmt = $conn->prepare("
-        SELECT t.*, ec.category_name 
-        FROM transactions t
-        LEFT JOIN expense_categories ec ON t.expense_category_id = ec.id 
-        WHERE t.id = ?
-    ");
+    // Soft delete transaksi utama
+    $stmt = $conn->prepare("UPDATE transactions SET status = 'deleted' WHERE id = ?");
     $stmt->execute([$id]);
-    $transaction = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$transaction) {
-        throw new Exception('Transaction not found');
-    }
-
-    // Jika ini transaksi savings dengan target, rollback progress
-    if ($transaction['type'] === 'expense' && 
-        $transaction['category_name'] === 'Savings' && 
-        $transaction['savings_type'] === 'targeted') {
-        
-        $stmt = $conn->prepare("
-            UPDATE savings_targets 
-            SET current_amount = current_amount - ?,
-                status = 'ongoing'
-            WHERE id = ? AND status = 'achieved'
-        ");
-        $stmt->execute([$transaction['amount'], $transaction['savings_target_id']]);
-    }
-
-    // Hard delete transaction
-    $stmt = $conn->prepare("DELETE FROM transactions WHERE id = ?");
-    $result = $stmt->execute([$id]);
-
-    if ($result) {
-        // Update balance tracking
-        $updateBalance = $conn->prepare("
-            UPDATE balance_tracking 
-            SET total_balance = total_balance + CASE 
-                    WHEN ? = 'expense' THEN ?
-                    ELSE -?
-                END,
-                total_savings = CASE 
-                    WHEN ? = 'Savings' THEN total_savings - ?
-                    ELSE total_savings
-                END
-            WHERE id = 1");
-        
-        $updateBalance->execute([
-            $transaction['type'],
-            $transaction['amount'],
-            $transaction['amount'],
-            $transaction['category_name'],
-            $transaction['amount']
+    if ($isTransfer) {
+        // Cari pasangan transfer
+        $pairType = $trx['type'] === 'income' ? 'expense' : 'income';
+        $stmt2 = $conn->prepare(
+            "UPDATE transactions SET status = 'deleted'
+             WHERE type = ? AND amount = ? AND date = ? AND description = ? 
+             AND income_source_id IS NULL AND expense_category_id IS NULL
+             AND status != 'deleted' AND id != ?");
+        $stmt2->execute([
+            $pairType, $trx['amount'], $trx['date'], $trx['description'], $trx['id']
         ]);
-
-        $conn->commit();
-        echo json_encode([
-            'success' => true,
-            'message' => 'Transaction deleted successfully'
-        ]);
-    } else {
-        throw new Exception('Failed to delete transaction');
     }
 
+    $conn->commit();
+
+    echo json_encode(['success' => true]);
 } catch(Exception $e) {
-    if ($conn) {
-        $conn->rollBack();
-    }
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    if (isset($conn) && $conn->inTransaction()) $conn->rollBack();
+    error_log('Delete Transaction Error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
+                    
