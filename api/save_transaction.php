@@ -11,10 +11,48 @@ try {
     $amount = $_POST['amount'];
     $date = $_POST['date'];
     $description = $_POST['description'];
-    $category = $_POST['category'];
-    $account_id = $_POST['account_id'] ?? null;
+
+    if ($type === 'transfer') {
+        // Handle transfer: insert two transactions (expense from, income to)
+        $from = $_POST['transfer_from'];
+        $to = $_POST['transfer_to'];
+        if ($from == $to) throw new Exception('Transfer source and destination must be different');
+
+        $conn->beginTransaction();
+        try {
+            // Insert expense (from)
+            $query1 = "INSERT INTO transactions 
+                (type, amount, date, description, expense_category_id, account_id, status) 
+                VALUES ('expense', ?, ?, ?, NULL, ?, 'completed')";
+            $stmt1 = $conn->prepare($query1);
+            if (!$stmt1->execute([$amount, $date, $description, $from])) {
+                throw new Exception('Failed to save transfer (from)');
+            }
+
+            // Insert income (to)
+            $query2 = "INSERT INTO transactions 
+                (type, amount, date, description, income_source_id, account_id, status) 
+                VALUES ('income', ?, ?, ?, NULL, ?, 'completed')";
+            $stmt2 = $conn->prepare($query2);
+            if (!$stmt2->execute([$amount, $date, $description, $to])) {
+                throw new Exception('Failed to save transfer (to)');
+            }
+
+            $conn->commit();
+            echo json_encode([
+                'success' => true,
+                'message' => 'Transfer saved successfully'
+            ]);
+        } catch(Exception $e) {
+            $conn->rollBack();
+            throw $e;
+        }
+        exit;
+    }
 
     // Parse category value (format: type_id)
+    $category = $_POST['category'];
+    $account_id = $_POST['account_id'] ?? null;
     list($categoryType, $categoryId) = explode('_', $category);
 
     // Set the appropriate column
