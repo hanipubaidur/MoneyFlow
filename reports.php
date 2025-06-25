@@ -27,14 +27,18 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
     }
     
     // Metrik Utama per periode
-    $metricsQuery = "SELECT COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE 0 END), 0) as total_income, COALESCE(SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END), 0) as total_expense, COALESCE(SUM(CASE WHEN t.expense_category_id = (SELECT id FROM expense_categories WHERE category_name = 'Savings') THEN t.amount ELSE 0 END), 0) as savings_amount, COALESCE(SUM(CASE WHEN t.expense_category_id = (SELECT id FROM expense_categories WHERE category_name = 'Debt/Loan') THEN t.amount ELSE 0 END), 0) as debt_amount FROM transactions t WHERE $where_clause AND t.status = 'completed'";
+    $metricsQuery = "SELECT 
+        COALESCE(SUM(CASE WHEN t.type = 'income' AND NOT (t.income_source_id IS NULL AND t.expense_category_id IS NULL) THEN t.amount ELSE 0 END), 0) as total_income, 
+        COALESCE(SUM(CASE WHEN t.type = 'expense' AND NOT (t.income_source_id IS NULL AND t.expense_category_id IS NULL) THEN t.amount ELSE 0 END), 0) as total_expense, 
+        COALESCE(SUM(CASE WHEN t.expense_category_id = (SELECT id FROM expense_categories WHERE category_name = 'Savings') THEN t.amount ELSE 0 END), 0) as savings_amount, 
+        COALESCE(SUM(CASE WHEN t.expense_category_id = (SELECT id FROM expense_categories WHERE category_name = 'Debt/Loan') THEN t.amount ELSE 0 END), 0) as debt_amount 
+        FROM transactions t 
+        WHERE $where_clause AND t.status = 'completed'";
     $metrics = $conn->query($metricsQuery)->fetch(PDO::FETCH_ASSOC);
 
-    // Saldo Akun per Periode DIHAPUS DARI SINI
-
     // Breakdown
-    $incomeBreakdown = $conn->query("SELECT i.source_name, SUM(t.amount) as total FROM transactions t LEFT JOIN income_sources i ON t.income_source_id = i.id WHERE t.type = 'income' AND t.status = 'completed' AND $where_clause GROUP BY i.id ORDER BY total DESC")->fetchAll(PDO::FETCH_ASSOC);
-    $expenseBreakdown = $conn->query("SELECT e.category_name, SUM(t.amount) as total FROM transactions t LEFT JOIN expense_categories e ON t.expense_category_id = e.id WHERE t.type = 'expense' AND t.status = 'completed' AND $where_clause GROUP BY e.id ORDER BY total DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $incomeBreakdown = $conn->query("SELECT i.source_name, SUM(t.amount) as total FROM transactions t LEFT JOIN income_sources i ON t.income_source_id = i.id WHERE t.type = 'income' AND t.status = 'completed' AND $where_clause AND NOT (t.income_source_id IS NULL AND t.expense_category_id IS NULL) GROUP BY i.id ORDER BY total DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $expenseBreakdown = $conn->query("SELECT e.category_name, SUM(t.amount) as total FROM transactions t LEFT JOIN expense_categories e ON t.expense_category_id = e.id WHERE t.type = 'expense' AND t.status = 'completed' AND $where_clause AND NOT (t.income_source_id IS NULL AND t.expense_category_id IS NULL) GROUP BY e.id ORDER BY total DESC")->fetchAll(PDO::FETCH_ASSOC);
     
     // Data JSON sekarang tidak lagi berisi account_balances
     $data = [
