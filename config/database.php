@@ -6,7 +6,7 @@ class Database {
     private $password = "";
     public $conn;
 
-    public function getConnection() {
+    public function getConnection(): PDO {
         $this->conn = null;
         try {
             $this->conn = new PDO(
