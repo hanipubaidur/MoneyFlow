@@ -38,8 +38,8 @@ try {
     $executive->setCellValue('A2', 'Advanced Financial Intelligence Platform');
     $executive->setCellValue('A3', 'EXECUTIVE DASHBOARD & ANALYTICS');
     $executive->setCellValue('A4', '📅 ' . date('l, F j, Y • g:i A T'));
-    
-    foreach(['A1:H1', 'A2:H2', 'A3:H3', 'A4:H4'] as $i => $range) {
+
+    foreach(['A1:F1', 'A2:F2', 'A3:F3', 'A4:F4'] as $i => $range) {
         $executive->mergeCells($range);
         $sizes = [24, 11, 16, 10];
         $colors = [$theme['primary'], $theme['secondary'], $theme['accent'], $theme['info']];
@@ -76,7 +76,7 @@ try {
     $runwayMonths = $netWorth > 0 && $burnRate > 0 ? ($netWorth / $burnRate) : 0;
 
     $executive->setCellValue('A6', '🎯 FINANCIAL PERFORMANCE METRICS');
-    $executive->mergeCells('A6:H6');
+    $executive->mergeCells('A6:F6');
     $executive->getStyle('A6')->applyFromArray([
         'font' => ['bold' => true, 'size' => 14, 'color' => ['rgb' => $theme['primary']]],
         'fill' => ['fillType' => Fill::FILL_GRADIENT_LINEAR, 'startColor' => ['rgb' => $theme['light']], 'endColor' => ['rgb' => 'E2E8F0']],
@@ -419,8 +419,8 @@ try {
 
     // Header styling
     $transactions->setCellValue('A1', '📋 COMPLETE TRANSACTION MASTER DATABASE');
-    $transactions->mergeCells('A1:E1');
-    $transactions->getStyle('A1')->applyFromArray([
+    $transactions->mergeCells('A1:F1'); // Ubah sampai F saja
+    $transactions->getStyle('A1:F1')->applyFromArray([
         'font' => ['bold' => true, 'size' => 18, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $theme['secondary']]],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
@@ -498,22 +498,20 @@ try {
             if($col === 'D') {
                 $transactions->getStyle($cell)->getNumberFormat()->setFormatCode('#,##0');
             }
+            // Warnai deskripsi jika ada (kolom F)
+            if($col === 'F') {
+                $transactions->getStyle($cell)->applyFromArray([
+                    'font' => ['color' => ['rgb' => $theme['accent']]],
+                ]);
+            }
         }
 
         // Row styling
         $bgColor = $t['type'] === 'income' ? 'E8F5E9' : 'FBE9E7';
-        $transactions->getStyle("A$row:E$row")->applyFromArray([
+        $transactions->getStyle("A$row:F$row")->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $bgColor]],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
         ]);
-
-        // Priority styling
-        $transactions->getStyle("H$row")->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => $priorityColor]]
-        ]);
-
-        // Set row height
-        $transactions->getRowDimension($row)->setRowHeight(20);
 
         $row++;
     }
@@ -521,8 +519,8 @@ try {
     // PERBAIKAN 3: Perbaikan summary section
     $summaryRow = $row + 2;
     $transactions->setCellValue("A$summaryRow", "📊 TRANSACTION SUMMARY");
-    $transactions->mergeCells("A$summaryRow:H$summaryRow");
-    $transactions->getStyle("A$summaryRow:H$summaryRow")->applyFromArray([
+    $transactions->mergeCells("A$summaryRow:F$summaryRow"); // Ubah sampai F saja
+    $transactions->getStyle("A$summaryRow:F$summaryRow")->applyFromArray([
         'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $theme['primary']]],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -580,9 +578,10 @@ try {
     // Add simple statistics instead
     $statsRow = $summaryStartRow + 6;
     $transactions->setCellValue("A$statsRow", "📈 QUICK INSIGHTS");
-    $transactions->mergeCells("A$statsRow:H$statsRow");
-    $transactions->getStyle("A$statsRow")->applyFromArray([
-        'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => $theme['accent']]],
+    $transactions->mergeCells("A$statsRow:F$statsRow");
+    $transactions->getStyle("A$statsRow:F$statsRow")->applyFromArray([
+        'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $theme['accent']]],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
     ]);
 
