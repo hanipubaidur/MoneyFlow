@@ -1,17 +1,17 @@
-# 💰 MoneyFlow - Pencatat Keuangan Pribadi
+# 💰 MoneyFlow - Personal Finance Tracker
 
 ![Last Commit](https://img.shields.io/github/last-commit/hanipubaidur/MoneyFlow?style=flat-square)
 
-## 📝 Pembaruan Terbaru
-- 🟢 Kolom "Account" (asal/tujuan uang) sekarang tampil di semua transaksi & export
-- 🟣 Tampilan kategori, sumber income, dan akun kini lebih rapi & bisa edit langsung
-- 🟡 Validasi savings target: input melebihi kekurangan target hanya masuk kekurangannya
-- 🔵 Export Excel: data transaksi lengkap (account, keterangan, dsb) & summary otomatis
-- 🟠 Dashboard: breakdown cashflow, expense, dan badge status lebih informatif
-- 🟤 Soft/hard delete kategori & akun otomatis sesuai penggunaan
-- 🟤 Perbaikan validasi form transaksi, savings, dan animasi progress bar
-- 🟢 Responsive, UI tabel & list lebih rapih (kategori, akun, transaksi, dsb)
-- 🟣 **Laporan: breakdown tabel income/expense kini menampilkan pesan jika data kosong dan total tetap muncul di footer**
+## 📝 Latest Updates
+- 🟢 "Account" column (source/destination) now shown in all transactions & exports
+- 🟣 Category, income source, and account display is cleaner & inline editable
+- 🟡 Savings target validation: input exceeding target only fills the gap
+- 🔵 Excel Export: complete transaction data (account, description, etc) & auto summary
+- 🟠 Dashboard: cashflow breakdown, expense, and more informative status badges
+- 🟤 Soft/hard delete for categories & accounts based on usage
+- 🟤 Improved form validation for transactions, savings, and progress bar animation
+- 🟢 Responsive, cleaner UI for tables & lists (categories, accounts, transactions, etc)
+- 🟣 **Report breakdown tables now show empty message and always display total in footer**
 
 <div align="center">
   
@@ -22,7 +22,7 @@
 
 </div>
 
-## 👨‍💻 Dibuat Oleh
+## 👨‍💻 Author
 
 <div align="center">
   <a href="https://github.com/hanipubaidur">
@@ -34,83 +34,115 @@
   [![GitHub](https://img.shields.io/badge/GitHub-hanipubaidur-181717?style=flat&logo=github)](https://github.com/hanipubaidur)
 </div>
 
-## 🌟 Tentang MoneyFlow
+## 🌟 About MoneyFlow
 
-MoneyFlow dibuat untuk membantu mencatat dan menganalisa keuangan pribadi dengan mudah. Aplikasi ini lahir dari kesulitan mencari aplikasi pencatat keuangan yang simpel namun tetap informatif.
+MoneyFlow is a simple yet powerful app to record and analyze your personal finances.  
+Track your income, expenses, savings targets, and account balances with ease.
 
-### ✨ Fitur Utama
-- 📊 Dashboard keuangan realtime (periode harian, mingguan, bulanan, tahunan)
-- 💰 Catat pemasukan & pengeluaran, pilih sumber/kategori & akun (bank, e-wallet, cash)
-- 🏦 Manajemen akun (bank, e-wallet, cash) & bisa edit/hapus
-- 🎯 Target & goals keuangan dengan validasi cerdas
-- 📈 Analisis cashflow & breakdown kategori, badge status otomatis
-- 💾 Export laporan Excel (data lengkap: account, keterangan, dsb)
-- 📝 Edit/hapus kategori, sumber income, dan akun langsung dari halaman kategori
-- 📱 Tampilan responsif & tabel/list lebih rapih
-- 🔄 Soft/hard delete kategori & akun otomatis sesuai penggunaan
-- 🟣 **Breakdown laporan income/expense tampilkan pesan jika data kosong & total tetap muncul di footer**
+---
 
-## 🛠️ Teknologi yang Digunakan
+## 🚀 Main Features
+
+- **Dashboard Overview:**  
+  See your balance, income, expenses, and ratios in real-time with animated breakdowns by period (daily, weekly, monthly, yearly).
+
+- **Transaction Recording:**  
+  Log income (cash, transfer, e-wallet) and expenses (categories, savings, etc) with easy selection.
+
+- **Account Management:**  
+  Add/edit/deactivate accounts (bank, e-wallet, cash) and manage all your money sources.
+
+- **Dynamic Categories:**  
+  Add/remove income sources and expense categories as needed.
+
+- **Reports & Analysis:**  
+  Full financial reports, cashflow charts, category breakdowns, monthly analytics, and Excel export.
+
+- **Responsive & User Friendly:**  
+  Modern UI, works great on both mobile and desktop.
+
+- **Data Security:**  
+  All data is stored locally in your MySQL database.
+
+---
+
+## ✨ Other Features
+
+- Export data to Excel
+- Inline edit/delete for categories, sources, and accounts
+- Animated progress bars and status badges
+
+---
+
+## 🛠️ Tech Stack
+
 - PHP 7.4+
-- MySQL 5.7+ 
+- MySQL 5.7+
 - HTML5, CSS3, JavaScript ES6
 - Bootstrap 5
 - Chart.js
-- PHPSpreadsheet 
+- PHPSpreadsheet
 - BoxIcons
 
-## ⚙️ Cara Install
+---
 
-1. **Clone Repository**
+## ⚙️ How to Install & Run
+
+### 1. **Requirements**
+- **XAMPP** (Apache & MySQL, PHP 7.4+)
+- **Git** (to clone the repo)
+- **VSCode** (optional, for editing)
+
+### 2. **Clone the Repository**
+Open **CMD** or **Git Bash**:
 ```bash
 git clone https://github.com/hanipubaidur/MoneyFlow.git
-cd MoneyFlow
 ```
 
-2. **Setup Database**
-```bash
-# Import database
-mysql -u root -p < database/money_flow.sql
+### 3. **Move Folder to XAMPP**
+- Open **File Explorer** to `C:\Users\<yourname>\MoneyFlow`
+- Press `Ctrl+X` on the `MoneyFlow` folder
+- Go to `C:\xampp\htdocs\`
+- Press `Ctrl+V` to paste into `htdocs`
 
-# Copy & edit konfigurasi
-cp config/database.example.php config/database.php
-```
+### 4. **Start XAMPP**
+- Open the **XAMPP** application
+- Start **Apache** and **MySQL**
 
-3. **Install Dependencies**
-```bash
-composer install
-```
+### 5. **Open Project in VSCode**
+- Open **VSCode**
+- Press `Ctrl+K O` (Open Folder)
+- Select the folder `C:\xampp\htdocs\MoneyFlow`
 
-## 📱 Cara Penggunaan
+### 6. **Import Database**
+- Open the file `database/money_flow.sql` in VSCode, `Ctrl+A` then `Ctrl+C`
+- In XAMPP, click **Admin** on MySQL (phpMyAdmin)
+- Create a new database, e.g. `money_flow`
+- Go to the **SQL** menu, paste all contents of `money_flow.sql`, then click **Go**
+- **OR:**  
+  Go to the **Import** tab, select the `money_flow.sql` file from your project folder, then click **Go**
 
-### Dashboard
-- Lihat ringkasan keuangan
-- Pantau cashflow harian/mingguan/bulanan/tahunan
-- Analisis pengeluaran per kategori & akun
+### 7. **Configure Database (Optional)**
+- If needed, edit `config/database.php` to match your MySQL user/password
 
-### Transaksi
-- Catat pemasukan/pengeluaran
-- Pilih kategori, sumber, dan akun (bank/e-wallet/cash)
-- Input nominal & keterangan
+### 8. **Run in Browser**
+- Open your browser and go to:  
+  ```
+  http://localhost/MoneyFlow
+  ```
 
-### Target Keuangan 
-- Buat target tabungan
-- Set target nominal
-- Monitor progres (otomatis validasi jika input melebihi target)
+---
 
-### Kategori, Sumber, Akun
-- Tambah/edit/hapus kategori pengeluaran, sumber income, dan akun
-- Semua list tampil rapi, bisa edit langsung tanpa reload halaman
+## 🧩 Function Descriptions
 
-### Laporan
-- Pilih periode laporan
-- Export ke Excel (data lengkap, summary, badge status)
-- Lihat grafik analisis & badge status per bulan
+> **Note:**  
+> Function descriptions and explanations are available as comments in each source file (such as `main.js`, `report.js`, `transactions.js`, etc).  
+> Please do not remove these comments, so other developers can easily understand the code flow and purpose of each function.
 
-##
+---
 
 <div align="center">
-  Dibuat dengan ❤️ oleh <a href="https://github.com/hanipubaidur">Hanif Ubaidur Rohman Syah</a>
+  Made with ❤️ by <a href="https://github.com/hanipubaidur">Hanif Ubaidur Rohman Syah</a>
   <br>
   © 2025 MoneyFlow
 </div>
