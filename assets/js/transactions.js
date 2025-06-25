@@ -18,45 +18,60 @@ document.addEventListener('DOMContentLoaded', function() {
 // Handle type switching
 function initializeTypeSwitch() {
     const typeSelect = document.getElementById('transactionType');
-    const categorySelect = document.querySelector('select[name="category"]');
+    const categorySection = document.getElementById('categorySection');
+    const categorySelect = document.getElementById('categorySelect');
     const incomeGroup = document.getElementById('incomeSourceGroup');
     const expenseGroup = document.getElementById('expenseCategoryGroup');
     const savingsSection = document.getElementById('savingsTargetSection');
     const savingsMessage = document.getElementById('savingsMessage');
-    
-    function updateFormView() {
-        const isExpense = typeSelect.value === 'expense';
-        
-        // Toggle optgroup display
-        incomeGroup.style.display = isExpense ? 'none' : 'block';
-        expenseGroup.style.display = isExpense ? 'block' : 'none';
-        
-        // Toggle individual options and update select value
-        const incomeOptions = document.querySelectorAll('.income-option');
-        const expenseOptions = document.querySelectorAll('.expense-option');
-        
-        incomeOptions.forEach(opt => opt.style.display = isExpense ? 'none' : '');
-        expenseOptions.forEach(opt => opt.style.display = isExpense ? '' : 'none');
+    const accountSection = document.getElementById('accountSection');
+    const transferSection = document.getElementById('transferSection');
 
-        // Set appropriate default option
-        if (isExpense) {
-            const firstExpenseOption = categorySelect.querySelector('.expense-option');
-            if (firstExpenseOption) categorySelect.value = firstExpenseOption.value;
-        } else {
-            const firstIncomeOption = categorySelect.querySelector('.income-option');
-            if (firstIncomeOption) categorySelect.value = firstIncomeOption.value;
+    function updateFormView() {
+        const type = typeSelect.value;
+        const isExpense = type === 'expense';
+        const isIncome = type === 'income';
+        const isTransfer = type === 'transfer';
+
+        // Show/hide category/transfer/account sections
+        categorySection.style.display = (isIncome || isExpense) ? 'block' : 'none';
+        transferSection.style.display = isTransfer ? 'block' : 'none';
+        accountSection.style.display = isTransfer ? 'none' : 'block';
+
+        // Toggle optgroup display for income/expense
+        if (isIncome || isExpense) {
+            incomeGroup.style.display = isExpense ? 'none' : 'block';
+            expenseGroup.style.display = isExpense ? 'block' : 'none';
+
+            // Toggle individual options and update select value
+            const incomeOptions = document.querySelectorAll('.income-option');
+            const expenseOptions = document.querySelectorAll('.expense-option');
+            incomeOptions.forEach(opt => opt.style.display = isExpense ? 'none' : '');
+            expenseOptions.forEach(opt => opt.style.display = isExpense ? '' : 'none');
+
+            // Set appropriate default option
+            if (isExpense) {
+                const firstExpenseOption = categorySelect.querySelector('.expense-option');
+                if (firstExpenseOption) categorySelect.value = firstExpenseOption.value;
+            } else {
+                const firstIncomeOption = categorySelect.querySelector('.income-option');
+                if (firstIncomeOption) categorySelect.value = firstIncomeOption.value;
+            }
         }
 
-        // Update savings section visibility
-        updateSavingsSection();
+        // Hide savings section for transfer
+        if (isTransfer) {
+            savingsSection.style.display = 'none';
+        } else {
+            updateSavingsSection();
+        }
     }
 
     function updateSavingsSection() {
         const selectedOption = categorySelect.selectedOptions[0];
         const isSavings = selectedOption && selectedOption.text.trim() === 'Savings';
-        
-        savingsSection.style.display = (typeSelect.value === 'expense' && isSavings) ? 'block' : 'none';
-        
+        const type = typeSelect.value;
+        savingsSection.style.display = (type === 'expense' && isSavings) ? 'block' : 'none';
         if (isSavings) {
             const targetId = document.getElementById('savingsTargetSelect').value;
             const targetName = targetId ? 
@@ -66,7 +81,6 @@ function initializeTypeSwitch() {
         }
     }
 
-    // Event listeners
     typeSelect.addEventListener('change', updateFormView);
     categorySelect.addEventListener('change', updateSavingsSection);
     document.getElementById('savingsTargetSelect')?.addEventListener('change', updateSavingsSection);
@@ -99,24 +113,34 @@ async function loadTransactions() {
             <tr>
                 <td>${new Date(t.date).toLocaleDateString('id-ID')}</td>
                 <td>
-                    <i class='bx ${t.type === 'income' ? 'bx-plus text-success' : 'bx-minus text-danger'}'></i>
+                    <i class='bx ${
+                        t.type === 'income' ? 'bx-plus text-success' :
+                        t.type === 'expense' ? 'bx-minus text-danger' :
+                        'bx-transfer text-info'
+                    }'></i>
                     ${t.type}
                 </td>
                 <td>${t.category}</td>
-                <td class="${t.type === 'income' ? 'text-success' : 'text-danger'}">
-                    ${t.type === 'income' ? '+' : '-'} 
+                <td class="${
+                    t.type === 'income' ? 'text-success' :
+                    t.type === 'expense' ? 'text-danger' : 'text-info'
+                }">
+                    ${t.type === 'income' ? '+' : t.type === 'expense' ? '-' : ''}
                     ${new Intl.NumberFormat('id-ID').format(t.amount)}
                 </td>
                 <td>
                     ${
                         t.account_name
                             ? `${t.account_name}${t.account_type ? ' (' + capitalize(t.account_type) + ')' : ''}`
-                            : '-'
+                            : (t.type === 'transfer' ? '-' : '-')
                     }
                 </td>
                 <td>${t.description || '-'}</td>
                 <td>
                     <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="editTransaction(${t.id})">
+                            <i class='bx bx-edit'></i>
+                        </button>
                         <button class="btn btn-outline-danger" onclick="deleteTransaction(${t.id})">
                             <i class='bx bx-trash'></i>
                         </button>
@@ -158,20 +182,27 @@ function editTransaction(id) {
             // Set form values
             form.querySelector('[name="type"]').value = data.type;
             form.querySelector('[name="amount"]').value = data.amount;
-            form.querySelector('[name="account_id"]').value = data.account_id || '';
             form.querySelector('[name="date"]').value = data.date;
             form.querySelector('[name="description"]').value = data.description || '';
 
-            // Trigger type change to show correct category options
+            // Trigger type change to show correct category/account/transfer options
             document.getElementById('transactionType').dispatchEvent(new Event('change'));
 
-            // Set correct category option
-            const categoryValue = `${data.type}_${data.type === 'income' ? data.income_source_id : data.expense_category_id}`;
-            form.querySelector('[name="category"]').value = categoryValue;
-
-            // Set account
-            if (form.querySelector('[name="account_id"]')) {
-                form.querySelector('[name="account_id"]').value = data.account_id || '';
+            // Set correct category/account/transfer
+            if (data.type === 'income' || data.type === 'expense') {
+                const categoryValue = `${data.type}_${data.type === 'income' ? data.income_source_id : data.expense_category_id}`;
+                form.querySelector('[name="category"]').value = categoryValue;
+                if (form.querySelector('[name="account_id"]')) {
+                    form.querySelector('[name="account_id"]').value = data.account_id || '';
+                }
+            } else if (data.type === 'transfer') {
+                // Untuk transfer, set transfer_from dan transfer_to jika ada
+                if (form.querySelector('[name="transfer_from"]')) {
+                    form.querySelector('[name="transfer_from"]').value = data.transfer_from || '';
+                }
+                if (form.querySelector('[name="transfer_to"]')) {
+                    form.querySelector('[name="transfer_to"]').value = data.transfer_to || '';
+                }
             }
 
             // Add transaction ID for update
@@ -231,25 +262,34 @@ async function handleFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
-    
+    const typeSelect = document.getElementById('transactionType');
+    const type = typeSelect.value;
+
     try {
-        // Check if this is a savings transaction
-        const categoryOption = form.querySelector('select[name="category"]').selectedOptions[0];
-        if (categoryOption.text.trim() === 'Savings') {
-            const targetSelect = form.querySelector('#savingsTargetSelect');
-            if (targetSelect.value) {
-                const targetOption = targetSelect.selectedOptions[0];
-                const remaining = parseFloat(targetOption.dataset.remaining);
-                const amount = parseFloat(formData.get('amount'));
-                
-                if (amount > remaining) {
-                    throw new Error(`Amount exceeds remaining target (${formatCurrency(remaining)})`);
+        if (type === 'transfer') {
+            // Validasi transfer: tidak boleh sama
+            const from = form.querySelector('[name="transfer_from"]').value;
+            const to = form.querySelector('[name="transfer_to"]').value;
+            if (from === to) throw new Error('Transfer source and destination must be different');
+            formData.append('transfer_from', from);
+            formData.append('transfer_to', to);
+        } else {
+            // Check if this is a savings transaction
+            const categoryOption = form.querySelector('select[name="category"]').selectedOptions[0];
+            if (categoryOption && categoryOption.text.trim() === 'Savings') {
+                const targetSelect = form.querySelector('#savingsTargetSelect');
+                if (targetSelect.value) {
+                    const targetOption = targetSelect.selectedOptions[0];
+                    const remaining = parseFloat(targetOption.dataset.remaining);
+                    const amount = parseFloat(formData.get('amount'));
+                    if (amount > remaining) {
+                        throw new Error(`Amount exceeds remaining target (${formatCurrency(remaining)})`);
+                    }
+                    formData.append('savings_target_id', targetSelect.value);
                 }
-                
-                formData.append('savings_target_id', targetSelect.value);
             }
         }
-        
+
         // Show loading
         Swal.fire({
             title: 'Saving...',
@@ -262,7 +302,7 @@ async function handleFormSubmit(e) {
         });
 
         const result = await response.json();
-        
+
         if (result.success) {
             Swal.fire({
                 icon: 'success',
