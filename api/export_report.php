@@ -53,18 +53,18 @@ try {
     }
 
     $summaryQuery = "SELECT 
-        COALESCE(SUM(CASE WHEN type = 'income' THEN amount END), 0) as total_income,
-        COALESCE(SUM(CASE WHEN type = 'expense' THEN amount END), 0) as total_expense,
-        COUNT(CASE WHEN type = 'income' THEN 1 END) as income_count,
-        COUNT(CASE WHEN type = 'expense' THEN 1 END) as expense_count,
+        COALESCE(SUM(CASE WHEN type = 'income' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN amount END), 0) as total_income,
+        COALESCE(SUM(CASE WHEN type = 'expense' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN amount END), 0) as total_expense,
+        COUNT(CASE WHEN type = 'income' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN 1 END) as income_count,
+        COUNT(CASE WHEN type = 'expense' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN 1 END) as expense_count,
         COALESCE(SUM(CASE WHEN type = 'expense' AND expense_category_id IN 
             (SELECT id FROM expense_categories WHERE category_name LIKE '%saving%' OR category_name LIKE '%invest%') 
             THEN amount END), 0) as savings,
         COALESCE(SUM(CASE WHEN type = 'expense' AND expense_category_id IN 
             (SELECT id FROM expense_categories WHERE category_name LIKE '%debt%' OR category_name LIKE '%loan%') 
             THEN amount END), 0) as debt,
-        COALESCE(AVG(CASE WHEN type = 'income' THEN amount END), 0) as avg_income,
-        COALESCE(AVG(CASE WHEN type = 'expense' THEN amount END), 0) as avg_expense,
+        COALESCE(AVG(CASE WHEN type = 'income' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN amount END), 0) as avg_income,
+        COALESCE(AVG(CASE WHEN type = 'expense' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN amount END), 0) as avg_expense,
         COUNT(DISTINCT DATE_FORMAT(date, '%Y-%m')) as active_months
         FROM transactions WHERE status != 'deleted'";
 
@@ -89,18 +89,36 @@ try {
         ['💸 Total Expenses', number_format($summary['total_expense'], 0, ',', '.'), 'Rp', $theme['danger'], '📉'],
         ['💎 Net Worth', number_format($netWorth, 0, ',', '.'), 'Rp', $netWorth >= 0 ? $theme['success'] : $theme['danger'], $netWorth >= 0 ? '🚀' : '⚠️'],
         ['🏦 Savings Pool', number_format($summary['savings'], 0, ',', '.'), 'Rp', $theme['info'], '💎'],
-        ['⚡ Burn Rate', number_format($burnRate, 0, ',', '.'), 'Rp/month', $theme['warning'], '🔥'],
-        ['📊 Savings Rate', number_format($savingsRate, 1), '%', $savingsRate >= 20 ? $theme['success'] : $theme['warning'], $savingsRate >= 20 ? '✨' : '⚡'],
-        ['🛡️ Financial Runway', number_format($runwayMonths, 1), 'months', $runwayMonths >= 6 ? $theme['success'] : $theme['danger'], $runwayMonths >= 6 ? '🛡️' : '🚨'],
-        ['📈 Transaction Volume', number_format($summary['income_count'] + $summary['expense_count']), 'transactions', $theme['accent'], '📋']
+        // Burn Rate: Rp amount /month
+        ['⚡ Burn Rate', number_format($burnRate, 0, ',', '.'), 'Rp', $theme['warning'], '🔥'],
+        // Savings Rate: amount %
+        ['📊 Savings Rate', number_format($savingsRate, 1), '', $savingsRate >= 20 ? $theme['success'] : $theme['warning'], $savingsRate >= 20 ? '✨' : '⚡'],
+        // Financial Runway: angka months
+        ['🛡️ Financial Runway', number_format($runwayMonths, 1), '', $runwayMonths >= 6 ? $theme['success'] : $theme['danger'], $runwayMonths >= 6 ? '🛡️' : '🚨'],
+        // Transaction Volume: angka transactions
+        ['📈 Transaction Volume', number_format($summary['income_count'] + $summary['expense_count']), '', $theme['accent'], '📋']
     ];
 
     // EXECUTIVE DASHBOARD
     $row = 8;
-    foreach($metrics as $metric) {
-        // Perbaiki data metrics agar tidak duplikat
+    foreach($metrics as $i => $metric) {
+        // Format value for special metrics
+        $value = $metric[1];
+        $unit = $metric[2];
+        if ($i === 4) { // Burn Rate
+            $displayValue = "Rp {$value} /month";
+        } elseif ($i === 5) { // Savings Rate
+            $displayValue = "{$value} %";
+        } elseif ($i === 6) { // Financial Runway
+            $displayValue = "{$value} months";
+        } elseif ($i === 7) { // Transaction Volume
+            $displayValue = "{$value} transactions";
+        } else {
+            $displayValue = "{$unit} {$value}";
+        }
+
         $executive->setCellValue('A'.$row, $metric[4] . ' ' . $metric[0]);
-        $executive->setCellValue('D'.$row, $metric[2] . ' ' . $metric[1]);
+        $executive->setCellValue('D'.$row, $displayValue);
         
         $executive->mergeCells("A$row:C$row");
         $executive->mergeCells("D$row:F$row");
@@ -171,7 +189,7 @@ try {
         COUNT(DISTINCT DATE_FORMAT(t.date, '%Y-%m')) as active_months
         FROM income_sources i
         LEFT JOIN transactions t ON i.id = t.income_source_id 
-        WHERE t.type = 'income' AND t.status != 'deleted'
+        WHERE t.type = 'income' AND t.status != 'deleted' AND NOT (t.income_source_id IS NULL AND t.expense_category_id IS NULL)
         GROUP BY i.id, i.source_name
         ORDER BY total DESC";
 
@@ -257,7 +275,7 @@ try {
         COUNT(DISTINCT DATE_FORMAT(t.date, '%Y-%m')) as months_active
         FROM expense_categories ec
         LEFT JOIN transactions t ON ec.id = t.expense_category_id 
-        WHERE t.type = 'expense' AND t.status != 'deleted'
+        WHERE t.type = 'expense' AND t.status != 'deleted' AND NOT (t.income_source_id IS NULL AND t.expense_category_id IS NULL)
         GROUP BY ec.id, ec.category_name
         ORDER BY total DESC";
 
@@ -339,12 +357,12 @@ try {
     $trendsQuery = "SELECT 
         DATE_FORMAT(date, '%Y-%m') as period,
         DATE_FORMAT(date, '%b %Y') as display_period,
-        SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
-        SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense,
-        COUNT(CASE WHEN type = 'income' THEN 1 END) as income_txn,
-        COUNT(CASE WHEN type = 'expense' THEN 1 END) as expense_txn,
-        AVG(CASE WHEN type = 'income' THEN amount END) as avg_income,
-        AVG(CASE WHEN type = 'expense' THEN amount END) as avg_expense
+        SUM(CASE WHEN type = 'income' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN amount ELSE 0 END) as income,
+        SUM(CASE WHEN type = 'expense' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN amount ELSE 0 END) as expense,
+        COUNT(CASE WHEN type = 'income' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN 1 END) as income_txn,
+        COUNT(CASE WHEN type = 'expense' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN 1 END) as expense_txn,
+        AVG(CASE WHEN type = 'income' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN amount END) as avg_income,
+        AVG(CASE WHEN type = 'expense' AND NOT (income_source_id IS NULL AND expense_category_id IS NULL) THEN amount END) as avg_expense
         FROM transactions 
         WHERE status != 'deleted' AND date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
         GROUP BY DATE_FORMAT(date, '%Y-%m'), DATE_FORMAT(date, '%b %Y')
@@ -451,7 +469,7 @@ try {
         LEFT JOIN income_sources i ON t.income_source_id = i.id
         LEFT JOIN expense_categories e ON t.expense_category_id = e.id
         LEFT JOIN accounts a ON t.account_id = a.id
-        WHERE t.status != 'deleted'
+        WHERE t.status != 'deleted' AND NOT (t.income_source_id IS NULL AND t.expense_category_id IS NULL)
         ORDER BY t.date DESC, t.id DESC
         LIMIT 500";
 
