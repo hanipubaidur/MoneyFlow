@@ -15,10 +15,9 @@ CREATE TABLE accounts (
 -- Insert default accounts
 INSERT INTO accounts (account_name, account_type, description) VALUES
 ('Cash', 'cash', 'Uang tunai'),
-('BCA', 'bank', 'Bank Central Asia'),
-('Mandiri', 'bank', 'Bank Mandiri'),
-('OVO', 'e-wallet', 'Dompet digital OVO'),
-('Gopay', 'e-wallet', 'Dompet digital Gopay');
+('Blu By BCA', 'bank', 'BLU By BCA'),
+('ShopeePay', 'e-wallet', 'Dompet digital ShopeePay'),
+('SeaBank', 'e-wallet', 'Dompet digital SeaBank');
 
 -- Create balance tracking table first
 CREATE TABLE balance_tracking (
