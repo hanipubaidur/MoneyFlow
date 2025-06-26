@@ -256,9 +256,7 @@ function updateExpenseChart(data) {
             labels: data.map(item => item.category_name),
             datasets: [{
                 data: data.map(item => parseFloat(item.total)),
-                backgroundColor: data.map(item => 
-                    CHART_COLORS.expenseCategories[item.category_name] || '#858796'
-                ),
+                backgroundColor: data.map(item => item.color || '#858796'), // <-- PAKAI WARNA DARI DB
                 borderWidth: 1,
                 borderColor: '#fff'
             }]
@@ -310,7 +308,7 @@ function updateExpenseTable(data, total) {
         .sort((a, b) => parseFloat(b.total) - parseFloat(a.total))
         .map(item => {
             const percentage = ((parseFloat(item.total) / total) * 100).toFixed(1);
-            const color = CHART_COLORS.expenseCategories[item.category_name] || '#858796';
+            const color = item.color || '#858796'; // <-- PAKAI WARNA DARI DB
             return `
                 <tr>
                     <td>
