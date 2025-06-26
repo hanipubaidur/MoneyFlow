@@ -2,19 +2,6 @@
 require_once '../config/database.php';
 header('Content-Type: application/json');
 
-define('EXPENSE_CATEGORIES', [
-    'Housing' => '#4e73df',
-    'Food' => '#1cc88a',
-    'Transportation' => '#36b9cc',
-    'Healthcare' => '#f6c23e',
-    'Entertainment' => '#e74a3b',
-    'Shopping' => '#858796',
-    'Education' => '#5a5c69',
-    'Debt/Loan' => '#2c9faf',
-    'Savings' => '#7E57C2',
-    'Other' => '#4A5568'
-]);
-
 try {
     $db = new Database();
     $conn = $db->getConnection();
@@ -107,11 +94,12 @@ try {
             default => "DATE_FORMAT(t.date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')"
         };
 
-        // Perbaiki query expense distribution
+        // Perbaiki query expense distribution: ambil color dari DB
         $query = "SELECT 
             ec.category_name,
             COALESCE(SUM(t.amount), 0) as total,
-            COUNT(t.id) as transaction_count
+            COUNT(t.id) as transaction_count,
+            ec.color
             FROM expense_categories ec
             LEFT JOIN transactions t ON (
                 ec.id = t.expense_category_id 
@@ -120,19 +108,19 @@ try {
                 AND $where_clause
             )
             WHERE ec.is_active = TRUE 
-            GROUP BY ec.id, ec.category_name
+            GROUP BY ec.id, ec.category_name, ec.color
             HAVING total > 0
             ORDER BY total DESC";
 
         $stmt = $conn->query($query);
         $expenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Tambahkan warna tetap ke setiap kategori
+        // Gunakan warna dari DB, fallback ke default jika kosong
         $result = array_map(function($item) {
             return [
                 'category_name' => $item['category_name'],
                 'total' => floatval($item['total']),
-                'color' => EXPENSE_CATEGORIES[$item['category_name']] ?? '#858796'
+                'color' => $item['color'] ?: '#858796'
             ];
         }, $expenses);
 
