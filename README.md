@@ -9,6 +9,7 @@
 - 🔵 Excel Export: complete transaction data (account, description, etc) & auto summary
 - 🟠 Dashboard: cashflow breakdown, expense, and more informative status badges
 - 🟤 Soft/hard delete for categories & accounts based on usage
+- 🟤 **Category cannot be hard deleted if still used in monthly summaries; will be soft deleted instead**
 - 🟤 Improved form validation for transactions, savings, and progress bar animation
 - 🟢 Responsive, cleaner UI for tables & lists (categories, accounts, transactions, etc)
 - 🟣 **Report breakdown tables now show empty message and always display total in footer**
