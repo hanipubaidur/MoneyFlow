@@ -67,6 +67,7 @@ if (isset($_POST['add'])) {
         $name = trim($_POST['name']);
         $type = $_POST['type'];
         $description = trim($_POST['description'] ?? '');
+        $color = $_POST['color'] ?? null;
 
         if (empty($name)) {
             throw new Exception('Name is required');
@@ -75,9 +76,11 @@ if (isset($_POST['add'])) {
         if ($type === 'income') {
             $checkQuery = "SELECT COUNT(*) FROM income_sources WHERE source_name = ? AND is_active = TRUE";
             $insertQuery = "INSERT INTO income_sources (source_name, description) VALUES (?, ?)";
+            $params = [$name, $description];
         } else {
             $checkQuery = "SELECT COUNT(*) FROM expense_categories WHERE category_name = ? AND is_active = TRUE";
-            $insertQuery = "INSERT INTO expense_categories (category_name, description) VALUES (?, ?)";
+            $insertQuery = "INSERT INTO expense_categories (category_name, description, color) VALUES (?, ?, ?)";
+            $params = [$name, $description, $color];
         }
 
         $stmt = $conn->prepare($checkQuery);
@@ -87,7 +90,7 @@ if (isset($_POST['add'])) {
         }
 
         $stmt = $conn->prepare($insertQuery);
-        $success = $stmt->execute([$name, $description]);
+        $success = $stmt->execute($params);
 
         header('Content-Type: application/json');
         if ($success) {
@@ -160,14 +163,17 @@ if (isset($_POST['edit'])) {
         $type = $_POST['type'];
         $name = trim($_POST['name']);
         $description = trim($_POST['description'] ?? '');
+        $color = $_POST['color'] ?? null;
         if (empty($name)) throw new Exception('Name is required');
         if ($type === 'income') {
             $query = "UPDATE income_sources SET source_name = ?, description = ? WHERE id = ?";
+            $params = [$name, $description, $id];
         } else {
-            $query = "UPDATE expense_categories SET category_name = ?, description = ? WHERE id = ?";
+            $query = "UPDATE expense_categories SET category_name = ?, description = ?, color = ? WHERE id = ?";
+            $params = [$name, $description, $color, $id];
         }
         $stmt = $conn->prepare($query);
-        $success = $stmt->execute([$name, $description, $id]);
+        $success = $stmt->execute($params);
         header('Content-Type: application/json');
         echo json_encode(['success' => $success, 'message' => 'Updated successfully']);
     } catch(Exception $e) {
@@ -214,8 +220,8 @@ ob_start();
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Add Expense Category</h5>
             </div>
-            <div class="card-body">
-                <form id="addExpenseCategoryForm" onsubmit="event.preventDefault(); addItem('expense');">
+            <div class="card-body d-flex flex-column h-100">
+                <form id="addExpenseCategoryForm" onsubmit="event.preventDefault(); addItem('expense');" class="d-flex flex-column h-100">
                     <div class="mb-3">
                         <label class="form-label">Category Name</label>
                         <input type="text" class="form-control" id="swal-name-expense" placeholder="e.g. Food, Shopping" required>
@@ -224,7 +230,11 @@ ob_start();
                         <label class="form-label">Description (optional)</label>
                         <textarea class="form-control" id="swal-description-expense" rows="2"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">
+                    <div class="mb-3">
+                        <label class="form-label">Color</label>
+                        <input type="color" class="form-control form-control-color" id="swal-color-expense" value="#858796">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 mt-auto">
                         <i class='bx bx-plus'></i> Add Category
                     </button>
                 </form>
@@ -237,8 +247,8 @@ ob_start();
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Add Income Source</h5>
             </div>
-            <div class="card-body">
-                <form id="addIncomeSourceForm" onsubmit="event.preventDefault(); addItem('income');">
+            <div class="card-body d-flex flex-column h-100">
+                <form id="addIncomeSourceForm" onsubmit="event.preventDefault(); addItem('income');" class="d-flex flex-column h-100">
                     <div class="mb-3">
                         <label class="form-label">Source Name</label>
                         <input type="text" class="form-control" id="swal-name-income" placeholder="e.g. Salary, Freelance" required>
@@ -247,7 +257,7 @@ ob_start();
                         <label class="form-label">Description (optional)</label>
                         <textarea class="form-control" id="swal-description-income" rows="2"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">
+                    <button type="submit" class="btn btn-success w-100 mt-auto">
                         <i class='bx bx-plus'></i> Add Source
                     </button>
                 </form>
@@ -260,8 +270,8 @@ ob_start();
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Add Account</h5>
             </div>
-            <div class="card-body">
-                <form id="addAccountForm" onsubmit="event.preventDefault(); addAccountFormSubmit();">
+            <div class="card-body d-flex flex-column h-100">
+                <form id="addAccountForm" onsubmit="event.preventDefault(); addAccountFormSubmit();" class="d-flex flex-column h-100">
                     <div class="mb-3">
                         <label class="form-label">Account Name</label>
                         <input type="text" class="form-control" id="swal-account-name-form" placeholder="e.g. BCA, Dana, Cash" required>
@@ -279,7 +289,7 @@ ob_start();
                         <label class="form-label">Description (optional)</label>
                         <textarea class="form-control" id="swal-account-description-form" rows="2"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">
+                    <button type="submit" class="btn btn-success w-100 mt-auto">
                         <i class='bx bx-plus'></i> Add Account
                     </button>
                 </form>
@@ -307,7 +317,7 @@ ob_start();
                         </div>
                         <div>
                             <button type="button" class="btn btn-sm btn-outline-primary me-1"
-                                onclick="editCategory(<?= $category['id'] ?>, 'expense', '<?= htmlspecialchars(addslashes($category['category_name'])) ?>', '<?= htmlspecialchars(addslashes($category['description'])) ?>')"
+                                onclick="editCategory(<?= $category['id'] ?>, 'expense', '<?= htmlspecialchars(addslashes($category['category_name'])) ?>', '<?= htmlspecialchars(addslashes($category['description'])) ?>', '<?= htmlspecialchars($category['color']) ?>')"
                                 title="Edit">
                                 <i class='bx bx-edit'></i>
                             </button>
@@ -414,6 +424,10 @@ ob_start();
             <label class="form-label">Description (optional)</label>
             <textarea class="form-control" id="editCategoryDescription" rows="2"></textarea>
           </div>
+          <div class="mb-3" id="editCategoryColorGroup" style="display:none;">
+            <label class="form-label">Color</label>
+            <input type="color" class="form-control form-control-color" id="editCategoryColor" value="#858796">
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -484,13 +498,15 @@ ob_start();
 <script>
 // Overwrite addItem to use form values if available
 function addItem(type) {
-    let name, description;
+    let name, description, color;
     if (type === 'income') {
         name = document.getElementById('swal-name-income')?.value || '';
         description = document.getElementById('swal-description-income')?.value || '';
+        color = null;
     } else {
         name = document.getElementById('swal-name-expense')?.value || '';
         description = document.getElementById('swal-description-expense')?.value || '';
+        color = document.getElementById('swal-color-expense')?.value || '#858796';
     }
     if (!name.trim()) {
         Swal.fire('Error', 'Name is required', 'error');
@@ -501,6 +517,7 @@ function addItem(type) {
     formData.append('type', type);
     formData.append('name', name);
     formData.append('description', description);
+    if (type !== 'income') formData.append('color', color);
 
     fetch('categories.php', {
         method: 'POST',
@@ -705,13 +722,18 @@ function confirmDeleteAccount(id, name) {
     });
 }
 
-function editCategory(id, type, name, description) {
+function editCategory(id, type, name, description, color = '#858796') {
     document.getElementById('editCategoryId').value = id;
     document.getElementById('editCategoryType').value = type;
     document.getElementById('editCategoryName').value = name.replace(/\\'/g, "'");
     document.getElementById('editCategoryDescription').value = description.replace(/\\'/g, "'");
     document.getElementById('editCategoryLabel').textContent = type === 'income' ? 'Source Name' : 'Category Name';
     document.getElementById('editCategoryModalLabel').textContent = type === 'income' ? 'Edit Income Source' : 'Edit Expense Category';
+    // Show/hide color input
+    document.getElementById('editCategoryColorGroup').style.display = (type === 'expense') ? 'block' : 'none';
+    if (type === 'expense') {
+        document.getElementById('editCategoryColor').value = color || '#858796';
+    }
     new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
 }
 
@@ -720,6 +742,7 @@ function saveEditCategory() {
     const type = document.getElementById('editCategoryType').value;
     const name = document.getElementById('editCategoryName').value;
     const description = document.getElementById('editCategoryDescription').value;
+    const color = type === 'expense' ? document.getElementById('editCategoryColor').value : null;
     if (!name.trim()) {
         Swal.fire('Error', 'Name is required', 'error');
         return;
@@ -730,6 +753,7 @@ function saveEditCategory() {
     formData.append('type', type);
     formData.append('name', name);
     formData.append('description', description);
+    if (type === 'expense') formData.append('color', color);
 
     fetch('categories.php', {
         method: 'POST',
