@@ -21,8 +21,16 @@ if (isset($_POST['delete'])) {
         $stmt->execute([$id]);
         $usageCount = $stmt->fetchColumn();
 
-        if ($usageCount > 0) {
-            // Soft delete
+        // Tambahkan pengecekan ke category_monthly_summaries jika expense
+        $hasSummary = false;
+        if ($type !== 'income') {
+            $summaryStmt = $conn->prepare("SELECT COUNT(*) FROM category_monthly_summaries WHERE category_id = ?");
+            $summaryStmt->execute([$id]);
+            $hasSummary = $summaryStmt->fetchColumn() > 0;
+        }
+
+        if ($usageCount > 0 || $hasSummary) {
+            // Soft delete jika masih dipakai di transaksi atau summary
             $query = "UPDATE $table SET is_active = FALSE WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->execute([$id]);
@@ -32,7 +40,7 @@ if (isset($_POST['delete'])) {
                 'message' => 'Successfully deactivated'
             ]);
         } else {
-            // Hard delete
+            // Hard delete jika benar-benar tidak dipakai
             $query = "DELETE FROM $table WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->execute([$id]);
