@@ -13,6 +13,7 @@
 - 🟤 Improved form validation for transactions, savings, and progress bar animation
 - 🟢 Responsive, cleaner UI for tables & lists (categories, accounts, transactions, etc)
 - 🟣 **Report breakdown tables now show empty message and always display total in footer**
+- 🟠 **Expense category color is now fully customizable and shown in charts**
 
 <div align="center">
   
@@ -55,6 +56,7 @@ Track your income, expenses, savings targets, and account balances with ease.
 
 - **Dynamic Categories:**  
   Add/remove income sources and expense categories as needed.
+  - **Custom color for each expense category, shown in expense charts**
 
 - **Reports & Analysis:**  
   Full financial reports, cashflow charts, category breakdowns, monthly analytics, and Excel export.
