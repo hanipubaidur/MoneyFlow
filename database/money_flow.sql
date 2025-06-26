@@ -50,7 +50,8 @@ CREATE TABLE expense_categories (
     is_fixed_expense BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    budget_limit DECIMAL(15,2) DEFAULT NULL
+    budget_limit DECIMAL(15,2) DEFAULT NULL,
+    color VARCHAR(10) DEFAULT NULL 
 );
 
 -- Modify savings_targets status ENUM
