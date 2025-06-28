@@ -7,7 +7,6 @@ use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Calculation\Financial\Constants as FinancialConstants;
 use PhpOffice\PhpSpreadsheet\Calculation\Functions;
 use PhpOffice\PhpSpreadsheet\Calculation\Information\ExcelError;
-use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
 class Rates
 {
@@ -32,14 +31,16 @@ class Rates
      *                         2               Actual/360
      *                         3               Actual/365
      *                         4               European 30/360
+     *
+     * @return float|string
      */
     public static function discount(
-        mixed $settlement,
-        mixed $maturity,
-        mixed $price,
-        mixed $redemption,
-        mixed $basis = FinancialConstants::BASIS_DAYS_PER_YEAR_NASD
-    ): float|string {
+        $settlement,
+        $maturity,
+        $price,
+        $redemption,
+        $basis = FinancialConstants::BASIS_DAYS_PER_YEAR_NASD
+    ) {
         $settlement = Functions::flattenSingleValue($settlement);
         $maturity = Functions::flattenSingleValue($maturity);
         $price = Functions::flattenSingleValue($price);
@@ -66,7 +67,7 @@ class Rates
         $daysBetweenSettlementAndMaturity = Functions::scalar(DateTimeExcel\YearFrac::fraction($settlement, $maturity, $basis));
         if (!is_numeric($daysBetweenSettlementAndMaturity)) {
             //    return date error
-            return StringHelper::convertToString($daysBetweenSettlementAndMaturity);
+            return $daysBetweenSettlementAndMaturity;
         }
 
         return (1 - $price / $redemption) / $daysBetweenSettlementAndMaturity;
@@ -93,14 +94,16 @@ class Rates
      *                         2               Actual/360
      *                         3               Actual/365
      *                         4               European 30/360
+     *
+     * @return float|string
      */
     public static function interest(
-        mixed $settlement,
-        mixed $maturity,
-        mixed $investment,
-        mixed $redemption,
-        mixed $basis = FinancialConstants::BASIS_DAYS_PER_YEAR_NASD
-    ): float|string {
+        $settlement,
+        $maturity,
+        $investment,
+        $redemption,
+        $basis = FinancialConstants::BASIS_DAYS_PER_YEAR_NASD
+    ) {
         $settlement = Functions::flattenSingleValue($settlement);
         $maturity = Functions::flattenSingleValue($maturity);
         $investment = Functions::flattenSingleValue($investment);
@@ -127,7 +130,7 @@ class Rates
         $daysBetweenSettlementAndMaturity = Functions::scalar(DateTimeExcel\YearFrac::fraction($settlement, $maturity, $basis));
         if (!is_numeric($daysBetweenSettlementAndMaturity)) {
             //    return date error
-            return StringHelper::convertToString($daysBetweenSettlementAndMaturity);
+            return $daysBetweenSettlementAndMaturity;
         }
 
         return (($redemption / $investment) - 1) / ($daysBetweenSettlementAndMaturity);

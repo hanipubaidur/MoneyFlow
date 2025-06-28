@@ -10,7 +10,10 @@ use SimpleXMLElement;
 
 class PageSetup
 {
-    private Spreadsheet $spreadsheet;
+    /**
+     * @var Spreadsheet
+     */
+    private $spreadsheet;
 
     public function __construct(Spreadsheet $spreadsheet)
     {
@@ -70,11 +73,6 @@ class PageSetup
         return $this;
     }
 
-    /**
-     * @param float[] $marginSet
-     *
-     * @return float[]
-     */
     private function buildMarginSet(SimpleXMLElement $sheet, array $marginSet): array
     {
         foreach ($sheet->PrintInformation->Margins->children(Gnumeric::NAMESPACE_GNM) as $key => $margin) {
@@ -88,7 +86,6 @@ class PageSetup
         return $marginSet;
     }
 
-    /** @param float[] $marginSet */
     private function adjustMargins(array $marginSet): void
     {
         foreach ($marginSet as $key => $marginSize) {

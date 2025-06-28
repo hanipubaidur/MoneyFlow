@@ -15,11 +15,6 @@ class Font extends StyleBase
         FontUnderline::UNDERLINE_SINGLEACCOUNTING,
     ];
 
-    /**
-     * @param mixed[][] $style
-     *
-     * @return mixed[][]
-     */
     protected function parseUnderline(array $style, string $styleAttributeValue): array
     {
         if (self::identifyFixedStyleValue(self::UNDERLINE_STYLES, $styleAttributeValue)) {
@@ -29,11 +24,6 @@ class Font extends StyleBase
         return $style;
     }
 
-    /**
-     * @param mixed[][] $style
-     *
-     * @return mixed[][]
-     */
     protected function parseVerticalAlign(array $style, string $styleAttributeValue): array
     {
         if ($styleAttributeValue == 'Superscript') {
@@ -46,7 +36,6 @@ class Font extends StyleBase
         return $style;
     }
 
-    /** @return mixed[] */
     public function parseStyle(SimpleXMLElement $styleAttributes): array
     {
         $style = [];
@@ -63,7 +52,6 @@ class Font extends StyleBase
 
                     break;
                 case 'Color':
-                    /** @var string[][][] $style */
                     $style['font']['color']['rgb'] = substr($styleAttributeValue, 1);
 
                     break;

@@ -2,40 +2,24 @@
 
 namespace PhpOffice\PhpSpreadsheet\Reader\Ods;
 
-use Composer\Pcre\Preg;
 use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
 
 class FormulaTranslator
 {
-    private static function replaceQuotedPeriod(string $value): string
-    {
-        $value2 = '';
-        $quoted = false;
-        foreach (mb_str_split($value, 1, 'UTF-8') as $char) {
-            if ($char === "'") {
-                $quoted = !$quoted;
-            } elseif ($char === '.' && $quoted) {
-                $char = "\u{fffe}";
-            }
-            $value2 .= $char;
-        }
-
-        return $value2;
-    }
-
     public static function convertToExcelAddressValue(string $openOfficeAddress): string
     {
+        $excelAddress = $openOfficeAddress;
+
         // Cell range 3-d reference
         // As we don't support 3-d ranges, we're just going to take a quick and dirty approach
         //  and assume that the second worksheet reference is the same as the first
-        $excelAddress = Preg::replace(
+        $excelAddress = (string) preg_replace(
             [
                 '/\$?([^\.]+)\.([^\.]+):\$?([^\.]+)\.([^\.]+)/miu',
                 '/\$?([^\.]+)\.([^\.]+):\.([^\.]+)/miu', // Cell range reference in another sheet
                 '/\$?([^\.]+)\.([^\.]+)/miu', // Cell reference in another sheet
                 '/\.([^\.]+):\.([^\.]+)/miu', // Cell range reference
                 '/\.([^\.]+)/miu', // Simple cell reference
-                '/\x{FFFE}/miu', // restore quoted periods
             ],
             [
                 '$1!$2:$4',
@@ -43,9 +27,8 @@ class FormulaTranslator
                 '$1!$2',
                 '$1:$2',
                 '$1',
-                '.',
             ],
-            self::replaceQuotedPeriod($openOfficeAddress)
+            $excelAddress
         );
 
         return $excelAddress;
@@ -63,22 +46,20 @@ class FormulaTranslator
             //      so that conversion isn't done in string values
             $tKey = $tKey === false;
             if ($tKey) {
-                $value = Preg::replace(
+                $value = (string) preg_replace(
                     [
                         '/\[\$?([^\.]+)\.([^\.]+):\.([^\.]+)\]/miu', // Cell range reference in another sheet
                         '/\[\$?([^\.]+)\.([^\.]+)\]/miu', // Cell reference in another sheet
                         '/\[\.([^\.]+):\.([^\.]+)\]/miu', // Cell range reference
                         '/\[\.([^\.]+)\]/miu', // Simple cell reference
-                        '/\x{FFFE}/miu', // restore quoted periods
                     ],
                     [
                         '$1!$2:$3',
                         '$1!$2',
                         '$1:$2',
                         '$1',
-                        '.',
                     ],
-                    self::replaceQuotedPeriod($value)
+                    $value
                 );
                 // Convert references to defined names/formulae
                 $value = str_replace('$$', '', $value);
@@ -104,18 +85,7 @@ class FormulaTranslator
                     Calculation::FORMULA_CLOSE_MATRIX_BRACE
                 );
 
-                $value = Preg::replace(
-                    [
-                        '/\b(?<!com[.]microsoft[.])'
-                            . '(floor|ceiling)\s*[(]/ui',
-                        '/COM\.MICROSOFT\./ui',
-                    ],
-                    [
-                        '$1.ODS(',
-                        '',
-                    ],
-                    $value
-                );
+                $value = (string) preg_replace('/COM\.MICROSOFT\./ui', '', $value);
             }
         }
 

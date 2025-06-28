@@ -8,9 +8,11 @@ use SimpleXMLElement;
 
 class PageSetup extends BaseParserClass
 {
-    private Worksheet $worksheet;
+    /** @var Worksheet */
+    private $worksheet;
 
-    private ?SimpleXMLElement $worksheetXml;
+    /** @var ?SimpleXMLElement */
+    private $worksheetXml;
 
     public function __construct(Worksheet $workSheet, ?SimpleXMLElement $worksheetXml = null)
     {
@@ -18,11 +20,6 @@ class PageSetup extends BaseParserClass
         $this->worksheetXml = $worksheetXml;
     }
 
-    /**
-     * @param mixed[] $unparsedLoadedData
-     *
-     * @return mixed[]
-     */
     public function load(array $unparsedLoadedData): array
     {
         $worksheetXml = $this->worksheetXml;
@@ -51,11 +48,6 @@ class PageSetup extends BaseParserClass
         }
     }
 
-    /**
-     * @param mixed[] $unparsedLoadedData
-     *
-     * @return mixed[]
-     */
     private function pageSetup(SimpleXMLElement $xmlSheet, Worksheet $worksheet, array $unparsedLoadedData): array
     {
         if ($xmlSheet->pageSetup) {
@@ -77,8 +69,8 @@ class PageSetup extends BaseParserClass
                 $docPageSetup->setFitToWidth((int) ($xmlSheet->pageSetup['fitToWidth']), false);
             }
             if (
-                isset($xmlSheet->pageSetup['firstPageNumber'], $xmlSheet->pageSetup['useFirstPageNumber'])
-                && self::boolean((string) $xmlSheet->pageSetup['useFirstPageNumber'])
+                isset($xmlSheet->pageSetup['firstPageNumber'], $xmlSheet->pageSetup['useFirstPageNumber']) &&
+                self::boolean((string) $xmlSheet->pageSetup['useFirstPageNumber'])
             ) {
                 $docPageSetup->setFirstPageNumber((int) ($xmlSheet->pageSetup['firstPageNumber']));
             }
@@ -89,10 +81,9 @@ class PageSetup extends BaseParserClass
             $relAttributes = $xmlSheet->pageSetup->attributes(Namespaces::SCHEMA_OFFICE_DOCUMENT);
             if (isset($relAttributes['id'])) {
                 $relid = (string) $relAttributes['id'];
-                if (!str_ends_with($relid, 'ps')) {
+                if (substr($relid, -2) !== 'ps') {
                     $relid .= 'ps';
                 }
-                /** @var mixed[][][] $unparsedLoadedData */
                 $unparsedLoadedData['sheets'][$worksheet->getCodeName()]['pageSetupRelId'] = $relid;
             }
         }
@@ -106,32 +97,32 @@ class PageSetup extends BaseParserClass
             $docHeaderFooter = $worksheet->getHeaderFooter();
 
             if (
-                isset($xmlSheet->headerFooter['differentOddEven'])
-                && self::boolean((string) $xmlSheet->headerFooter['differentOddEven'])
+                isset($xmlSheet->headerFooter['differentOddEven']) &&
+                self::boolean((string) $xmlSheet->headerFooter['differentOddEven'])
             ) {
                 $docHeaderFooter->setDifferentOddEven(true);
             } else {
                 $docHeaderFooter->setDifferentOddEven(false);
             }
             if (
-                isset($xmlSheet->headerFooter['differentFirst'])
-                && self::boolean((string) $xmlSheet->headerFooter['differentFirst'])
+                isset($xmlSheet->headerFooter['differentFirst']) &&
+                self::boolean((string) $xmlSheet->headerFooter['differentFirst'])
             ) {
                 $docHeaderFooter->setDifferentFirst(true);
             } else {
                 $docHeaderFooter->setDifferentFirst(false);
             }
             if (
-                isset($xmlSheet->headerFooter['scaleWithDoc'])
-                && !self::boolean((string) $xmlSheet->headerFooter['scaleWithDoc'])
+                isset($xmlSheet->headerFooter['scaleWithDoc']) &&
+                !self::boolean((string) $xmlSheet->headerFooter['scaleWithDoc'])
             ) {
                 $docHeaderFooter->setScaleWithDocument(false);
             } else {
                 $docHeaderFooter->setScaleWithDocument(true);
             }
             if (
-                isset($xmlSheet->headerFooter['alignWithMargins'])
-                && !self::boolean((string) $xmlSheet->headerFooter['alignWithMargins'])
+                isset($xmlSheet->headerFooter['alignWithMargins']) &&
+                !self::boolean((string) $xmlSheet->headerFooter['alignWithMargins'])
             ) {
                 $docHeaderFooter->setAlignWithMargins(false);
             } else {
@@ -160,7 +151,7 @@ class PageSetup extends BaseParserClass
     private function rowBreaks(SimpleXMLElement $xmlSheet, Worksheet $worksheet): void
     {
         foreach ($xmlSheet->rowBreaks->brk as $brk) {
-            $rowBreakMax = /*isset($brk['max']) ? ((int) $brk['max']) :*/ -1;
+            $rowBreakMax = isset($brk['max']) ? ((int) $brk['max']) : -1;
             if ($brk['man']) {
                 $worksheet->setBreak("A{$brk['id']}", Worksheet::BREAK_ROW, $rowBreakMax);
             }

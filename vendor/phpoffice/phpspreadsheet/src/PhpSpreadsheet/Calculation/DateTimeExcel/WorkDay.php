@@ -2,7 +2,6 @@
 
 namespace PhpOffice\PhpSpreadsheet\Calculation\DateTimeExcel;
 
-use DateTime;
 use PhpOffice\PhpSpreadsheet\Calculation\ArrayEnabled;
 use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Calculation\Functions;
@@ -22,21 +21,21 @@ class WorkDay
      * Excel Function:
      *        WORKDAY(startDate,endDays[,holidays[,holiday[,...]]])
      *
-     * @param array<mixed>|mixed $startDate Excel date serial value (float), PHP date timestamp (integer),
+     * @param array|mixed $startDate Excel date serial value (float), PHP date timestamp (integer),
      *                                        PHP DateTime object, or a standard date string
      *                         Or can be an array of date values
-     * @param array<mixed>|int $endDays The number of nonweekend and nonholiday days before or after
+     * @param array|int $endDays The number of nonweekend and nonholiday days before or after
      *                                        startDate. A positive value for days yields a future date; a
      *                                        negative value yields a past date.
      *                         Or can be an array of int values
      * @param null|mixed $dateArgs An array of dates (such as holidays) to exclude from the calculation
      *
-     * @return array<mixed>|DateTime|float|int|string Excel date/time serial value, PHP date/time serial value or PHP date/time object,
+     * @return array|mixed Excel date/time serial value, PHP date/time serial value or PHP date/time object,
      *                        depending on the value of the ReturnDateType flag
      *         If an array of values is passed for the $startDate or $endDays,arguments, then the returned result
      *            will also be an array with matching dimensions
      */
-    public static function date(mixed $startDate, array|int|string $endDays, mixed ...$dateArgs): array|float|int|DateTime|string
+    public static function date($startDate, $endDays, ...$dateArgs)
     {
         if (is_array($startDate) || is_array($endDays)) {
             return self::evaluateArrayArgumentsSubset(
@@ -73,9 +72,9 @@ class WorkDay
     /**
      * Use incrementing logic to determine Workday.
      *
-     * @param array<mixed> $holidayArray
+     * @return mixed
      */
-    private static function incrementing(float $startDate, int $endDays, array $holidayArray): float|int|DateTime
+    private static function incrementing(float $startDate, int $endDays, array $holidayArray)
     {
         //    Adjust the start date if it falls over a weekend
         $startDoW = self::getWeekDay($startDate, 3);
@@ -105,12 +104,10 @@ class WorkDay
         return Helpers::returnIn3FormatsFloat($endDate);
     }
 
-    /** @param array<mixed> $holidayArray */
     private static function incrementingArray(float $startDate, float $endDate, array $holidayArray): float
     {
         $holidayCountedArray = $holidayDates = [];
         foreach ($holidayArray as $holidayDate) {
-            /** @var float $holidayDate */
             if (self::getWeekDay($holidayDate, 3) < 5) {
                 $holidayDates[] = $holidayDate;
             }
@@ -136,9 +133,9 @@ class WorkDay
     /**
      * Use decrementing logic to determine Workday.
      *
-     * @param array<mixed> $holidayArray
+     * @return mixed
      */
-    private static function decrementing(float $startDate, int $endDays, array $holidayArray): float|int|DateTime
+    private static function decrementing(float $startDate, int $endDays, array $holidayArray)
     {
         //    Adjust the start date if it falls over a weekend
         $startDoW = self::getWeekDay($startDate, 3);
@@ -168,12 +165,10 @@ class WorkDay
         return Helpers::returnIn3FormatsFloat($endDate);
     }
 
-    /** @param array<mixed> $holidayArray */
     private static function decrementingArray(float $startDate, float $endDate, array $holidayArray): float
     {
         $holidayCountedArray = $holidayDates = [];
         foreach ($holidayArray as $holidayDate) {
-            /** @var float $holidayDate */
             if (self::getWeekDay($holidayDate, 3) < 5) {
                 $holidayDates[] = $holidayDate;
             }

@@ -15,16 +15,18 @@ class AutoFit
         $this->worksheet = $worksheet;
     }
 
-    /** @return mixed[] */
     public function getAutoFilterIndentRanges(): array
     {
         $autoFilterIndentRanges = [];
         $autoFilterIndentRanges[] = $this->getAutoFilterIndentRange($this->worksheet->getAutoFilter());
 
         foreach ($this->worksheet->getTableCollection() as $table) {
+            /** @var Table $table */
             if ($table->getShowHeaderRow() === true && $table->getAllowFilter() === true) {
                 $autoFilter = $table->getAutoFilter();
-                $autoFilterIndentRanges[] = $this->getAutoFilterIndentRange($autoFilter);
+                if ($autoFilter !== null) {
+                    $autoFilterIndentRanges[] = $this->getAutoFilterIndentRange($autoFilter);
+                }
             }
         }
 

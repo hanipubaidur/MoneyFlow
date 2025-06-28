@@ -6,8 +6,14 @@ use PhpOffice\PhpSpreadsheet\Calculation\Information\ExcelError;
 
 class Filter
 {
-    /** @param mixed[] $lookupArray */
-    public static function filter(array $lookupArray, mixed $matchArray, mixed $ifEmpty = null): mixed
+    /**
+     * @param mixed $lookupArray
+     * @param mixed $matchArray
+     * @param mixed $ifEmpty
+     *
+     * @return mixed
+     */
+    public static function filter($lookupArray, $matchArray, $ifEmpty = null)
     {
         if (!is_array($matchArray)) {
             return ExcelError::VALUE();
@@ -22,17 +28,10 @@ class Filter
         if (empty($result)) {
             return $ifEmpty ?? ExcelError::CALC();
         }
-        /** @var callable(mixed): mixed */
-        $func = 'array_values';
 
-        return array_values(array_map($func, $result));
+        return array_values(array_map('array_values', $result));
     }
 
-    /**
-     * @param mixed[] $sortArray
-     *
-     * @return mixed[]
-     */
     private static function enumerateArrayKeys(array $sortArray): array
     {
         array_walk(
@@ -47,29 +46,19 @@ class Filter
         return array_values($sortArray);
     }
 
-    /**
-     * @param mixed[] $lookupArray
-     * @param mixed[] $matchArray
-     *
-     * @return mixed[]
-     */
     private static function filterByRow(array $lookupArray, array $matchArray): array
     {
-        $matchArray = array_values(array_column($matchArray, 0)); // @phpstan-ignore-line
+        $matchArray = array_values(array_column($matchArray, 0));
 
         return array_filter(
             array_values($lookupArray),
-            fn ($index): bool => (bool) $matchArray[$index],
+            function ($index) use ($matchArray): bool {
+                return (bool) $matchArray[$index];
+            },
             ARRAY_FILTER_USE_KEY
         );
     }
 
-    /**
-     * @param mixed[] $lookupArray
-     * @param mixed[] $matchArray
-     *
-     * @return mixed[]
-     */
     private static function filterByColumn(array $lookupArray, array $matchArray): array
     {
         $lookupArray = Matrix::transpose($lookupArray);
@@ -77,7 +66,7 @@ class Filter
         if (count($matchArray) === 1) {
             $matchArray = array_pop($matchArray);
         }
-        /** @var mixed[] $matchArray */
+
         array_walk(
             $matchArray,
             function (&$value): void {

@@ -9,15 +9,17 @@ class Dompdf extends Pdf
 {
     /**
      * embed images, or link to images.
+     *
+     * @var bool
      */
-    protected bool $embedImages = true;
+    protected $embedImages = true;
 
     /**
      * Gets the implementation of external PDF library that should be used.
      *
      * @return \Dompdf\Dompdf implementation
      */
-    protected function createExternalWriterInstance(): \Dompdf\Dompdf
+    protected function createExternalWriterInstance()
     {
         return new \Dompdf\Dompdf();
     }
@@ -36,7 +38,7 @@ class Dompdf extends Pdf
         $orientation = $this->getOrientation() ?? $setup->getOrientation();
         $orientation = ($orientation === PageSetup::ORIENTATION_LANDSCAPE) ? 'L' : 'P';
         $printPaperSize = $this->getPaperSize() ?? $setup->getPaperSize();
-        $paperSize = self::$paperSizes[$printPaperSize] ?? self::$paperSizes[PageSetup::getPaperSizeDefault()] ?? 'LETTER';
+        $paperSize = self::$paperSizes[$printPaperSize] ?? PageSetup::getPaperSizeDefault();
         if (is_array($paperSize) && count($paperSize) === 2) {
             $paperSize = [0.0, 0.0, $paperSize[0], $paperSize[1]];
         }

@@ -2,27 +2,20 @@
 
 namespace PhpOffice\PhpSpreadsheet\Style\NumberFormat\Wizard;
 
-use Stringable;
-
-abstract class DateTimeWizard implements Stringable, Wizard
+abstract class DateTimeWizard implements Wizard
 {
     protected const NO_ESCAPING_NEEDED = "$+-/():!^&'~{}<>= ";
 
-    /**
-     * @param string[] $separators
-     *
-     * @return string[]
-     */
     protected function padSeparatorArray(array $separators, int $count): array
     {
-        $lastSeparator = (string) array_pop($separators);
+        $lastSeparator = array_pop($separators);
 
         return $separators + array_fill(0, $count, $lastSeparator);
     }
 
     protected function escapeSingleCharacter(string $value): string
     {
-        if (str_contains(self::NO_ESCAPING_NEEDED, $value)) {
+        if (strpos(self::NO_ESCAPING_NEEDED, $value) !== false) {
             return $value;
         }
 

@@ -7,6 +7,9 @@ use SimpleXMLElement;
 
 class Fill extends StyleBase
 {
+    /**
+     * @var array
+     */
     public const FILL_MAPPINGS = [
         'fillType' => [
             'solid' => FillStyles::FILL_SOLID,
@@ -30,7 +33,6 @@ class Fill extends StyleBase
         ],
     ];
 
-    /** @return mixed[] */
     public function parseStyle(SimpleXMLElement $styleAttributes): array
     {
         $style = [];

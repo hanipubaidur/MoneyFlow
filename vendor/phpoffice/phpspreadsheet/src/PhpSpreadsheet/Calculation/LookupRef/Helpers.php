@@ -35,7 +35,6 @@ class Helpers
         }
     }
 
-    /** @return array{string, ?string, string} */
     public static function extractCellAddresses(string $cellAddress, bool $a1, Worksheet $sheet, string $sheetName = '', ?int $baseRow = null, ?int $baseCol = null): array
     {
         $cellAddress1 = $cellAddress;
@@ -50,7 +49,7 @@ class Helpers
             $cellAddress = $cellAddress1;
             $a1 = self::CELLADDRESS_USE_A1;
         }
-        if (str_contains($cellAddress, ':')) {
+        if (strpos($cellAddress, ':') !== false) {
             [$cellAddress1, $cellAddress2] = explode(':', $cellAddress);
         }
         $cellAddress = self::convertR1C1($cellAddress1, $cellAddress2, $a1, $baseRow, $baseCol);
@@ -58,12 +57,12 @@ class Helpers
         return [$cellAddress1, $cellAddress2, $cellAddress];
     }
 
-    /** @return array{string, ?Worksheet, string} */
     public static function extractWorksheet(string $cellAddress, Cell $cell): array
     {
         $sheetName = '';
-        if (str_contains($cellAddress, '!')) {
-            [$sheetName, $cellAddress] = Worksheet::extractSheetTitle($cellAddress, true, true);
+        if (strpos($cellAddress, '!') !== false) {
+            [$sheetName, $cellAddress] = Worksheet::extractSheetTitle($cellAddress, true);
+            $sheetName = trim($sheetName, "'");
         }
 
         $worksheet = ($sheetName !== '')

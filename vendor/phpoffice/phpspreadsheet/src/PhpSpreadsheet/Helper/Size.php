@@ -2,22 +2,29 @@
 
 namespace PhpOffice\PhpSpreadsheet\Helper;
 
-use Stringable;
-
-class Size implements Stringable
+class Size
 {
     const REGEXP_SIZE_VALIDATION = '/^(?P<size>\d*\.?\d+)(?P<unit>pt|px|em)?$/i';
 
-    protected bool $valid = false;
+    /**
+     * @var bool
+     */
+    protected $valid;
 
-    protected string $size = '';
+    /**
+     * @var string
+     */
+    protected $size = '';
 
-    protected string $unit = '';
+    /**
+     * @var string
+     */
+    protected $unit = '';
 
     public function __construct(string $size)
     {
-        if (1 === preg_match(self::REGEXP_SIZE_VALIDATION, $size, $matches)) {
-            $this->valid = true;
+        $this->valid = (bool) preg_match(self::REGEXP_SIZE_VALIDATION, $size, $matches);
+        if ($this->valid) {
             $this->size = $matches['size'];
             $this->unit = $matches['unit'] ?? 'pt';
         }
@@ -38,7 +45,7 @@ class Size implements Stringable
         return $this->unit;
     }
 
-    public function __toString(): string
+    public function __toString()
     {
         return $this->size . $this->unit;
     }

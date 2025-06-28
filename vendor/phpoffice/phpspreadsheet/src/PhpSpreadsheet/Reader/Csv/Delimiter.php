@@ -9,16 +9,20 @@ class Delimiter
     /** @var resource */
     protected $fileHandle;
 
-    protected string $escapeCharacter;
+    /** @var string */
+    protected $escapeCharacter;
 
-    protected string $enclosure;
+    /** @var string */
+    protected $enclosure;
 
-    /** @var array<string, int[]> */
-    protected array $counts = [];
+    /** @var array */
+    protected $counts = [];
 
-    protected int $numberLines = 0;
+    /** @var int */
+    protected $numberLines = 0;
 
-    protected ?string $delimiter = null;
+    /** @var ?string */
+    protected $delimiter;
 
     /**
      * @param resource $fileHandle
@@ -54,15 +58,16 @@ class Delimiter
         }
     }
 
-    /** @param array<string, int> $delimiterKeys */
     protected function countDelimiterValues(string $line, array $delimiterKeys): void
     {
-        $splitString = mb_str_split($line, 1, 'UTF-8');
-        $distribution = array_count_values($splitString);
-        $countLine = array_intersect_key($distribution, $delimiterKeys);
+        $splitString = str_split($line, 1);
+        if (is_array($splitString)) {
+            $distribution = array_count_values($splitString);
+            $countLine = array_intersect_key($distribution, $delimiterKeys);
 
-        foreach (self::POTENTIAL_DELIMETERS as $delimiter) {
-            $this->counts[$delimiter][] = $countLine[$delimiter] ?? 0;
+            foreach (self::POTENTIAL_DELIMETERS as $delimiter) {
+                $this->counts[$delimiter][] = $countLine[$delimiter] ?? 0;
+            }
         }
     }
 
@@ -71,7 +76,7 @@ class Delimiter
         // Calculate the mean square deviations for each delimiter
         //     (ignoring delimiters that haven't been found consistently)
         $meanSquareDeviations = [];
-        $middleIdx = (int) floor(($this->numberLines - 1) / 2);
+        $middleIdx = floor(($this->numberLines - 1) / 2);
 
         foreach (self::POTENTIAL_DELIMETERS as $delimiter) {
             $series = $this->counts[$delimiter];
@@ -87,7 +92,9 @@ class Delimiter
 
             $meanSquareDeviations[$delimiter] = array_reduce(
                 $series,
-                fn ($sum, $value): int|float => $sum + ($value - $median) ** 2
+                function ($sum, $value) use ($median) {
+                    return $sum + ($value - $median) ** 2;
+                }
             ) / count($series);
         }
 

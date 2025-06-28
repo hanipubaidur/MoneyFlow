@@ -2,13 +2,10 @@
 
 namespace PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-use Composer\Pcre\Preg;
-use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
-
 class FunctionPrefix
 {
     const XLFNREGEXP = '/(?:_xlfn\.)?((?:_xlws\.)?\b('
-        // functions added with Excel 2010
+            // functions added with Excel 2010
         . 'beta[.]dist'
         . '|beta[.]inv'
         . '|binom[.]dist'
@@ -128,50 +125,32 @@ class FunctionPrefix
         . '|switch'
         // functions added with Excel 2019
         . '|concat'
+        . '|countifs'
         . '|ifs'
         . '|maxifs'
         . '|minifs'
+        . '|sumifs'
         . '|textjoin'
         // functions added with Excel 365
-        . '|anchorarray'
-        . '|arraytotext'
-        . '|bycol'
-        . '|byrow'
-        . '|call'
-        . '|choosecols'
-        . '|chooserows'
-        . '|drop'
-        . '|expand'
         . '|filter'
-        . '|groupby'
-        . '|hstack'
-        . '|isomitted'
-        . '|lambda'
-        . '|let'
-        . '|makearray'
-        . '|map'
         . '|randarray'
-        . '|reduce'
-        . '|register[.]id'
-        . '|scan'
+        . '|anchorarray'
         . '|sequence'
-        . '|single'
         . '|sort'
         . '|sortby'
-        . '|take'
-        . '|textafter'
-        . '|textbefore'
-        . '|textjoin'
-        . '|textsplit'
-        . '|tocol'
-        . '|torow'
         . '|unique'
-        . '|valuetotext'
-        . '|vstack'
-        . '|wrapcols'
-        . '|wraprows'
         . '|xlookup'
         . '|xmatch'
+        . '|arraytotext'
+        . '|call'
+        . '|let'
+        . '|lambda'
+        . '|single'
+        . '|register[.]id'
+        . '|textafter'
+        . '|textbefore'
+        . '|textsplit'
+        . '|valuetotext'
         . '))\s*\(/Umui';
 
     const XLWSREGEXP = '/(?<!_xlws\.)('
@@ -185,7 +164,7 @@ class FunctionPrefix
      */
     protected static function addXlfnPrefix(string $functionString): string
     {
-        return Preg::replace(self::XLFNREGEXP, '_xlfn.$1(', $functionString);
+        return (string) preg_replace(self::XLFNREGEXP, '_xlfn.$1(', $functionString);
     }
 
     /**
@@ -193,7 +172,7 @@ class FunctionPrefix
      */
     protected static function addXlwsPrefix(string $functionString): string
     {
-        return Preg::replace(self::XLWSREGEXP, '_xlws.$1(', $functionString);
+        return (string) preg_replace(self::XLWSREGEXP, '_xlws.$1(', $functionString);
     }
 
     /**
@@ -201,12 +180,6 @@ class FunctionPrefix
      */
     public static function addFunctionPrefix(string $functionString): string
     {
-        $functionString = Preg::replaceCallback(
-            Calculation::CALCULATION_REGEXP_CELLREF_SPILL,
-            fn (array $matches) => 'ANCHORARRAY(' . substr((string) $matches[0], 0, -1) . ')',
-            $functionString
-        );
-
         return self::addXlwsPrefix(self::addXlfnPrefix($functionString));
     }
 
@@ -216,18 +189,6 @@ class FunctionPrefix
      */
     public static function addFunctionPrefixStripEquals(string $functionString): string
     {
-        $functionString = Preg::replace(
-            [
-                '/\b(CEILING|FLOOR)[.]ODS\s*[(]/',
-                '/\b(CEILING|FLOOR)[.]XCL\s*[(]/',
-            ],
-            [
-                '$1.MATH(',
-                '$1(',
-            ],
-            $functionString
-        );
-
         return self::addFunctionPrefix(substr($functionString, 1));
     }
 }

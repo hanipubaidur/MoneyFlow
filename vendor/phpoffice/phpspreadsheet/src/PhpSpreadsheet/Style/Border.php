@@ -25,15 +25,22 @@ class Border extends Supervisor
 
     /**
      * Border style.
+     *
+     * @var string
      */
-    protected string $borderStyle = self::BORDER_NONE;
+    protected $borderStyle = self::BORDER_NONE;
 
     /**
      * Border color.
+     *
+     * @var Color
      */
-    protected Color $color;
+    protected $color;
 
-    public ?int $colorIndex = null;
+    /**
+     * @var null|int
+     */
+    public $colorIndex;
 
     /**
      * Create a new Border.
@@ -42,7 +49,7 @@ class Border extends Supervisor
      *                                    Leave this value at default unless you understand exactly what
      *                                        its ramifications are
      */
-    public function __construct(bool $isSupervisor = false, bool $isConditional = false)
+    public function __construct($isSupervisor = false, bool $isConditional = false)
     {
         // Supervisor?
         parent::__construct($isSupervisor);
@@ -62,38 +69,45 @@ class Border extends Supervisor
     /**
      * Get the shared style component for the currently active cell in currently active sheet.
      * Only used for style supervisor.
+     *
+     * @return Border
      */
-    public function getSharedComponent(): self
+    public function getSharedComponent()
     {
-        /** @var Style $parent */
+        /** @var Style */
         $parent = $this->parent;
 
         /** @var Borders $sharedComponent */
         $sharedComponent = $parent->getSharedComponent();
+        switch ($this->parentPropertyName) {
+            case 'bottom':
+                return $sharedComponent->getBottom();
+            case 'diagonal':
+                return $sharedComponent->getDiagonal();
+            case 'left':
+                return $sharedComponent->getLeft();
+            case 'right':
+                return $sharedComponent->getRight();
+            case 'top':
+                return $sharedComponent->getTop();
+        }
 
-        return match ($this->parentPropertyName) {
-            'bottom' => $sharedComponent->getBottom(),
-            'diagonal' => $sharedComponent->getDiagonal(),
-            'left' => $sharedComponent->getLeft(),
-            'right' => $sharedComponent->getRight(),
-            'top' => $sharedComponent->getTop(),
-            default => throw new PhpSpreadsheetException('Cannot get shared component for a pseudo-border.'),
-        };
+        throw new PhpSpreadsheetException('Cannot get shared component for a pseudo-border.');
     }
 
     /**
      * Build style array from subcomponents.
      *
-     * @param mixed[] $array
+     * @param array $array
      *
-     * @return mixed[]
+     * @return array
      */
-    public function getStyleArray(array $array): array
+    public function getStyleArray($array)
     {
-        /** @var Style $parent */
+        /** @var Style */
         $parent = $this->parent;
 
-        return $parent->getStyleArray([$this->parentPropertyName => $array]);
+        return $parent->/** @scrutinizer ignore-call */ getStyleArray([$this->parentPropertyName => $array]);
     }
 
     /**
@@ -110,22 +124,20 @@ class Border extends Supervisor
      * );
      * </code>
      *
-     * @param mixed[] $styleArray Array containing style information
+     * @param array $styleArray Array containing style information
      *
      * @return $this
      */
-    public function applyFromArray(array $styleArray): static
+    public function applyFromArray(array $styleArray)
     {
         if ($this->isSupervisor) {
             $this->getActiveSheet()->getStyle($this->getSelectedCells())->applyFromArray($this->getStyleArray($styleArray));
         } else {
-            /** @var array{borderStyle?: string, color?: array{rgb?: string, argb?: string}} $styleArray */
             if (isset($styleArray['borderStyle'])) {
                 $this->setBorderStyle($styleArray['borderStyle']);
             }
             if (isset($styleArray['color'])) {
-                $this->getColor()
-                    ->applyFromArray($styleArray['color']);
+                $this->getColor()->applyFromArray($styleArray['color']);
             }
         }
 
@@ -134,8 +146,10 @@ class Border extends Supervisor
 
     /**
      * Get Border style.
+     *
+     * @return string
      */
-    public function getBorderStyle(): string
+    public function getBorderStyle()
     {
         if ($this->isSupervisor) {
             return $this->getSharedComponent()->getBorderStyle();
@@ -147,12 +161,13 @@ class Border extends Supervisor
     /**
      * Set Border style.
      *
-     * @param bool|string $style When passing a boolean, FALSE equates Border::BORDER_NONE
+     * @param bool|string $style
+     *                            When passing a boolean, FALSE equates Border::BORDER_NONE
      *                                and TRUE to Border::BORDER_MEDIUM
      *
      * @return $this
      */
-    public function setBorderStyle(bool|string $style): static
+    public function setBorderStyle($style)
     {
         if (empty($style)) {
             $style = self::BORDER_NONE;
@@ -172,8 +187,10 @@ class Border extends Supervisor
 
     /**
      * Get Border Color.
+     *
+     * @return Color
      */
-    public function getColor(): Color
+    public function getColor()
     {
         return $this->color;
     }
@@ -183,7 +200,7 @@ class Border extends Supervisor
      *
      * @return $this
      */
-    public function setColor(Color $color): static
+    public function setColor(Color $color)
     {
         // make sure parameter is a real color and not a supervisor
         $color = $color->getIsSupervisor() ? $color->getSharedComponent() : $color;
@@ -203,20 +220,19 @@ class Border extends Supervisor
      *
      * @return string Hash code
      */
-    public function getHashCode(): string
+    public function getHashCode()
     {
         if ($this->isSupervisor) {
             return $this->getSharedComponent()->getHashCode();
         }
 
         return md5(
-            $this->borderStyle
-            . $this->color->getHashCode()
-            . __CLASS__
+            $this->borderStyle .
+            $this->color->getHashCode() .
+            __CLASS__
         );
     }
 
-    /** @return mixed[] */
     protected function exportArray1(): array
     {
         $exportedArray = [];

@@ -22,7 +22,7 @@ class Style extends WriterPart
      *
      * @return string XML Output
      */
-    public function writeStyles(Spreadsheet $spreadsheet): string
+    public function writeStyles(Spreadsheet $spreadsheet)
     {
         // Create XML writer
         $objWriter = null;
@@ -170,8 +170,8 @@ class Style extends WriterPart
     {
         // Check if this is a pattern type or gradient type
         if (
-            $fill->getFillType() === Fill::FILL_GRADIENT_LINEAR
-            || $fill->getFillType() === Fill::FILL_GRADIENT_PATH
+            $fill->getFillType() === Fill::FILL_GRADIENT_LINEAR ||
+            $fill->getFillType() === Fill::FILL_GRADIENT_PATH
         ) {
             // Gradient fill
             $this->writeGradientFill($objWriter, $fill);
@@ -199,7 +199,7 @@ class Style extends WriterPart
         $objWriter->writeAttribute('position', '0');
 
         // color
-        if (!empty($fill->getStartColor()->getARGB())) {
+        if ($fill->getStartColor()->getARGB() !== null) {
             $objWriter->startElement('color');
             $objWriter->writeAttribute('rgb', $fill->getStartColor()->getARGB());
             $objWriter->endElement();
@@ -212,7 +212,7 @@ class Style extends WriterPart
         $objWriter->writeAttribute('position', '1');
 
         // color
-        if (!empty($fill->getEndColor()->getARGB())) {
+        if ($fill->getEndColor()->getARGB() !== null) {
             $objWriter->startElement('color');
             $objWriter->writeAttribute('rgb', $fill->getEndColor()->getARGB());
             $objWriter->endElement();
@@ -244,9 +244,7 @@ class Style extends WriterPart
 
         // patternFill
         $objWriter->startElement('patternFill');
-        if ($fill->getFillType()) {
-            $objWriter->writeAttribute('patternType', (string) $fill->getFillType());
-        }
+        $objWriter->writeAttribute('patternType', (string) $fill->getFillType());
 
         if (self::writePatternColors($fill)) {
             // fgColor
@@ -347,12 +345,7 @@ class Style extends WriterPart
         }
 
         // Foreground color
-        if ($font->getColor()->getTheme() >= 0) {
-            $this->startFont($objWriter, $fontStarted);
-            $objWriter->startElement('color');
-            $objWriter->writeAttribute('theme', (string) $font->getColor()->getTheme());
-            $objWriter->endElement();
-        } elseif ($font->getColor()->getARGB() !== null) {
+        if ($font->getColor()->getARGB() !== null) {
             $this->startFont($objWriter, $fontStarted);
             $objWriter->startElement('color');
             $objWriter->writeAttribute('rgb', $font->getColor()->getARGB());
@@ -414,6 +407,9 @@ class Style extends WriterPart
         $objWriter->endElement();
     }
 
+    /** @var mixed */
+    private static $scrutinizerFalse = false;
+
     /**
      * Write Cell Style Xf.
      */
@@ -427,7 +423,7 @@ class Style extends WriterPart
             $objWriter->writeAttribute('quotePrefix', '1');
         }
 
-        if ($style->getNumberFormat()->getBuiltInFormatCode() === false) {
+        if ($style->getNumberFormat()->getBuiltInFormatCode() === self::$scrutinizerFalse) {
             $objWriter->writeAttribute('numFmtId', (string) (int) ($this->getParentWriter()->getNumFmtHashTable()->getIndexForHashCode($style->getNumberFormat()->getHashCode()) + 164));
         } else {
             $objWriter->writeAttribute('numFmtId', (string) (int) $style->getNumberFormat()->getBuiltInFormatCode());
@@ -461,10 +457,6 @@ class Style extends WriterPart
             }
             if ($vertical !== '') {
                 $objWriter->writeAttribute('vertical', $vertical);
-            }
-            $justifyLastLine = $style->getAlignment()->getJustifyLastLine();
-            if (is_bool($justifyLastLine)) {
-                $objWriter->writeAttribute('justifyLastLine', (string) (int) $justifyLastLine);
             }
 
             if ($style->getAlignment()->getTextRotation() >= 0) {
@@ -518,8 +510,55 @@ class Style extends WriterPart
         // fill
         $this->writeFill($objWriter, $style->getFill());
 
+        // alignment
+        $horizontal = Alignment::HORIZONTAL_ALIGNMENT_FOR_XLSX[$style->getAlignment()->getHorizontal()] ?? '';
+        $vertical = Alignment::VERTICAL_ALIGNMENT_FOR_XLSX[$style->getAlignment()->getVertical()] ?? '';
+        $rotation = $style->getAlignment()->getTextRotation();
+        if ($horizontal || $vertical || $rotation !== null) {
+            $objWriter->startElement('alignment');
+            if ($horizontal) {
+                $objWriter->writeAttribute('horizontal', $horizontal);
+            }
+            if ($vertical) {
+                $objWriter->writeAttribute('vertical', $vertical);
+            }
+
+            if ($rotation !== null) {
+                if ($rotation >= 0) {
+                    $textRotation = $rotation;
+                } else {
+                    $textRotation = 90 - $rotation;
+                }
+                $objWriter->writeAttribute('textRotation', (string) $textRotation);
+            }
+            $objWriter->endElement();
+        }
+
         // border
         $this->writeBorder($objWriter, $style->getBorders());
+
+        // protection
+        if ((!empty($style->getProtection()->getLocked())) || (!empty($style->getProtection()->getHidden()))) {
+            if (
+                $style->getProtection()->getLocked() !== Protection::PROTECTION_INHERIT ||
+                $style->getProtection()->getHidden() !== Protection::PROTECTION_INHERIT
+            ) {
+                $objWriter->startElement('protection');
+                if (
+                    ($style->getProtection()->getLocked() !== null) &&
+                    ($style->getProtection()->getLocked() !== Protection::PROTECTION_INHERIT)
+                ) {
+                    $objWriter->writeAttribute('locked', ($style->getProtection()->getLocked() == Protection::PROTECTION_PROTECTED ? 'true' : 'false'));
+                }
+                if (
+                    ($style->getProtection()->getHidden() !== null) &&
+                    ($style->getProtection()->getHidden() !== Protection::PROTECTION_INHERIT)
+                ) {
+                    $objWriter->writeAttribute('hidden', ($style->getProtection()->getHidden() == Protection::PROTECTION_PROTECTED ? 'true' : 'false'));
+                }
+                $objWriter->endElement();
+            }
+        }
 
         $objWriter->endElement();
     }
@@ -529,7 +568,7 @@ class Style extends WriterPart
      *
      * @param string $name Element name
      */
-    private function writeBorderPr(XMLWriter $objWriter, string $name, Border $border): void
+    private function writeBorderPr(XMLWriter $objWriter, $name, Border $border): void
     {
         // Write BorderPr
         if ($border->getBorderStyle() === Border::BORDER_OMIT) {
@@ -554,7 +593,7 @@ class Style extends WriterPart
      *
      * @param int $id Number Format identifier
      */
-    private function writeNumFmt(XMLWriter $objWriter, ?NumberFormat $numberFormat, int $id = 0): void
+    private function writeNumFmt(XMLWriter $objWriter, ?NumberFormat $numberFormat, $id = 0): void
     {
         // Translate formatcode
         $formatCode = ($numberFormat === null) ? null : $numberFormat->getFormatCode();
@@ -573,7 +612,7 @@ class Style extends WriterPart
      *
      * @return \PhpOffice\PhpSpreadsheet\Style\Style[] All styles in PhpSpreadsheet
      */
-    public function allStyles(Spreadsheet $spreadsheet): array
+    public function allStyles(Spreadsheet $spreadsheet)
     {
         return $spreadsheet->getCellXfCollection();
     }
@@ -583,7 +622,7 @@ class Style extends WriterPart
      *
      * @return Conditional[] All conditional styles in PhpSpreadsheet
      */
-    public function allConditionalStyles(Spreadsheet $spreadsheet): array
+    public function allConditionalStyles(Spreadsheet $spreadsheet)
     {
         // Get an array of all styles
         $aStyles = [];
@@ -605,7 +644,7 @@ class Style extends WriterPart
      *
      * @return Fill[] All fills in PhpSpreadsheet
      */
-    public function allFills(Spreadsheet $spreadsheet): array
+    public function allFills(Spreadsheet $spreadsheet)
     {
         // Get an array of unique fills
         $aFills = [];
@@ -620,6 +659,7 @@ class Style extends WriterPart
         $aFills[] = $fill1;
         // The remaining fills
         $aStyles = $this->allStyles($spreadsheet);
+        /** @var \PhpOffice\PhpSpreadsheet\Style\Style $style */
         foreach ($aStyles as $style) {
             if (!isset($aFills[$style->getFill()->getHashCode()])) {
                 $aFills[$style->getFill()->getHashCode()] = $style->getFill();
@@ -634,12 +674,13 @@ class Style extends WriterPart
      *
      * @return Font[] All fonts in PhpSpreadsheet
      */
-    public function allFonts(Spreadsheet $spreadsheet): array
+    public function allFonts(Spreadsheet $spreadsheet)
     {
         // Get an array of unique fonts
         $aFonts = [];
         $aStyles = $this->allStyles($spreadsheet);
 
+        /** @var \PhpOffice\PhpSpreadsheet\Style\Style $style */
         foreach ($aStyles as $style) {
             if (!isset($aFonts[$style->getFont()->getHashCode()])) {
                 $aFonts[$style->getFont()->getHashCode()] = $style->getFont();
@@ -654,12 +695,13 @@ class Style extends WriterPart
      *
      * @return Borders[] All borders in PhpSpreadsheet
      */
-    public function allBorders(Spreadsheet $spreadsheet): array
+    public function allBorders(Spreadsheet $spreadsheet)
     {
         // Get an array of unique borders
         $aBorders = [];
         $aStyles = $this->allStyles($spreadsheet);
 
+        /** @var \PhpOffice\PhpSpreadsheet\Style\Style $style */
         foreach ($aStyles as $style) {
             if (!isset($aBorders[$style->getBorders()->getHashCode()])) {
                 $aBorders[$style->getBorders()->getHashCode()] = $style->getBorders();
@@ -674,12 +716,13 @@ class Style extends WriterPart
      *
      * @return NumberFormat[] All number formats in PhpSpreadsheet
      */
-    public function allNumberFormats(Spreadsheet $spreadsheet): array
+    public function allNumberFormats(Spreadsheet $spreadsheet)
     {
         // Get an array of unique number formats
         $aNumFmts = [];
         $aStyles = $this->allStyles($spreadsheet);
 
+        /** @var \PhpOffice\PhpSpreadsheet\Style\Style $style */
         foreach ($aStyles as $style) {
             if ($style->getNumberFormat()->getBuiltInFormatCode() === false && !isset($aNumFmts[$style->getNumberFormat()->getHashCode()])) {
                 $aNumFmts[$style->getNumberFormat()->getHashCode()] = $style->getNumberFormat();

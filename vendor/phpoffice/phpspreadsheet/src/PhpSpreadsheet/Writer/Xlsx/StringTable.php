@@ -21,11 +21,15 @@ class StringTable extends WriterPart
      *
      * @return string[] String table for worksheet
      */
-    public function createStringTable(ActualWorksheet $worksheet, ?array $existingTable = null): array
+    public function createStringTable(ActualWorksheet $worksheet, $existingTable = null)
     {
         // Create string lookup table
-        /** @var string[] */
-        $aStringTable = $existingTable ?? [];
+        $aStringTable = [];
+
+        // Is an existing table given?
+        if (($existingTable !== null) && is_array($existingTable)) {
+            $aStringTable = $existingTable;
+        }
 
         // Fill index array
         $aFlippedStringTable = $this->flipStringTable($aStringTable);
@@ -36,23 +40,23 @@ class StringTable extends WriterPart
             $cell = $worksheet->getCellCollection()->get($coordinate);
             $cellValue = $cell->getValue();
             if (
-                !is_object($cellValue)
-                && ($cellValue !== null)
-                && $cellValue !== ''
-                && ($cell->getDataType() == DataType::TYPE_STRING || $cell->getDataType() == DataType::TYPE_STRING2 || $cell->getDataType() == DataType::TYPE_NULL)
-                && !isset($aFlippedStringTable[$cellValue])
+                !is_object($cellValue) &&
+                ($cellValue !== null) &&
+                $cellValue !== '' &&
+                ($cell->getDataType() == DataType::TYPE_STRING || $cell->getDataType() == DataType::TYPE_STRING2 || $cell->getDataType() == DataType::TYPE_NULL) &&
+                !isset($aFlippedStringTable[$cellValue])
             ) {
                 $aStringTable[] = $cellValue;
                 $aFlippedStringTable[$cellValue] = true;
             } elseif (
-                $cellValue instanceof RichText
-                && !isset($aFlippedStringTable[$cellValue->getHashCode()])
+                $cellValue instanceof RichText &&
+                ($cellValue !== null) &&
+                !isset($aFlippedStringTable[$cellValue->getHashCode()])
             ) {
                 $aStringTable[] = $cellValue;
                 $aFlippedStringTable[$cellValue->getHashCode()] = true;
             }
         }
-        /** @var string[] $aStringTable */
 
         return $aStringTable;
     }
@@ -64,7 +68,7 @@ class StringTable extends WriterPart
      *
      * @return string XML Output
      */
-    public function writeStringTable(array $stringTable): string
+    public function writeStringTable(array $stringTable)
     {
         // Create XML writer
         $objWriter = null;
@@ -109,9 +113,9 @@ class StringTable extends WriterPart
     /**
      * Write Rich Text.
      *
-     * @param ?string $prefix Optional Namespace prefix
+     * @param string $prefix Optional Namespace prefix
      */
-    public function writeRichText(XMLWriter $objWriter, RichText $richText, ?string $prefix = null): void
+    public function writeRichText(XMLWriter $objWriter, RichText $richText, $prefix = null): void
     {
         if ($prefix !== null) {
             $prefix .= ':';
@@ -201,7 +205,7 @@ class StringTable extends WriterPart
      * @param RichText|string $richText text string or Rich text
      * @param string $prefix Optional Namespace prefix
      */
-    public function writeRichTextForCharts(XMLWriter $objWriter, $richText = null, string $prefix = ''): void
+    public function writeRichTextForCharts(XMLWriter $objWriter, $richText = null, $prefix = ''): void
     {
         if (!($richText instanceof RichText)) {
             $textRun = $richText;
@@ -319,11 +323,11 @@ class StringTable extends WriterPart
     /**
      * Flip string table (for index searching).
      *
-     * @param array<RichText|string> $stringTable Stringtable
+     * @param array $stringTable Stringtable
      *
-     * @return array<RichText|string>
+     * @return array
      */
-    public function flipStringTable(array $stringTable): array
+    public function flipStringTable(array $stringTable)
     {
         // Return value
         $returnValue = [];

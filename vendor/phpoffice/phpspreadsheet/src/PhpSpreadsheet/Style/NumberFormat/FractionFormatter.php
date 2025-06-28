@@ -6,8 +6,10 @@ use PhpOffice\PhpSpreadsheet\Calculation\MathTrig;
 
 class FractionFormatter extends BaseFormatter
 {
-    /** @param null|bool|float|int|string $value  value to be formatted */
-    public static function format(mixed $value, string $format): string
+    /**
+     * @param mixed $value
+     */
+    public static function format($value, string $format): string
     {
         $format = self::stripQuotes($format);
         $value = (float) $value;
@@ -25,27 +27,27 @@ class FractionFormatter extends BaseFormatter
         $decimalDivisor = 10 ** $decimalLength;
 
         preg_match('/(#?.*\?)\/(\?+|\d+)/', $format, $matches);
-        $formatIntegerPart = $matches[1] ?? '0';
+        $formatIntegerPart = $matches[1];
 
-        if (isset($matches[2]) && is_numeric($matches[2])) {
+        if (is_numeric($matches[2])) {
             $fractionDivisor = 100 / (int) $matches[2];
         } else {
-            /** @var float $fractionDivisor */
+            /** @var float */
             $fractionDivisor = MathTrig\Gcd::evaluate((int) $decimalPart, $decimalDivisor);
         }
 
         $adjustedDecimalPart = (int) round((int) $decimalPart / $fractionDivisor, 0);
         $adjustedDecimalDivisor = $decimalDivisor / $fractionDivisor;
 
-        if ((str_contains($formatIntegerPart, '0'))) {
+        if ((strpos($formatIntegerPart, '0') !== false)) {
             return "{$sign}{$integerPart} {$adjustedDecimalPart}/{$adjustedDecimalDivisor}";
-        } elseif ((str_contains($formatIntegerPart, '#'))) {
+        } elseif ((strpos($formatIntegerPart, '#') !== false)) {
             if ($integerPart == 0) {
                 return "{$sign}{$adjustedDecimalPart}/{$adjustedDecimalDivisor}";
             }
 
             return "{$sign}{$integerPart} {$adjustedDecimalPart}/{$adjustedDecimalDivisor}";
-        } elseif ((str_starts_with($formatIntegerPart, '? ?'))) {
+        } elseif ((substr($formatIntegerPart, 0, 3) == '? ?')) {
             if ($integerPart == 0) {
                 $integerPart = '';
             }

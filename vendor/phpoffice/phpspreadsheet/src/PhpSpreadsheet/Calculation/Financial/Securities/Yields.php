@@ -7,7 +7,6 @@ use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Calculation\Financial\Constants as FinancialConstants;
 use PhpOffice\PhpSpreadsheet\Calculation\Financial\Helpers;
 use PhpOffice\PhpSpreadsheet\Calculation\Functions;
-use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
 class Yields
 {
@@ -33,11 +32,11 @@ class Yields
      * @return float|string Result, or a string containing an error
      */
     public static function yieldDiscounted(
-        mixed $settlement,
-        mixed $maturity,
-        mixed $price,
-        mixed $redemption,
-        mixed $basis = FinancialConstants::BASIS_DAYS_PER_YEAR_NASD
+        $settlement,
+        $maturity,
+        $price,
+        $redemption,
+        $basis = FinancialConstants::BASIS_DAYS_PER_YEAR_NASD
     ) {
         $settlement = Functions::flattenSingleValue($settlement);
         $maturity = Functions::flattenSingleValue($maturity);
@@ -65,7 +64,7 @@ class Yields
         $daysBetweenSettlementAndMaturity = Functions::scalar(DateTimeExcel\YearFrac::fraction($settlement, $maturity, $basis));
         if (!is_numeric($daysBetweenSettlementAndMaturity)) {
             //    return date error
-            return StringHelper::convertToString($daysBetweenSettlementAndMaturity);
+            return $daysBetweenSettlementAndMaturity;
         }
         $daysBetweenSettlementAndMaturity *= $daysPerYear;
 
@@ -95,12 +94,12 @@ class Yields
      * @return float|string Result, or a string containing an error
      */
     public static function yieldAtMaturity(
-        mixed $settlement,
-        mixed $maturity,
-        mixed $issue,
-        mixed $rate,
-        mixed $price,
-        mixed $basis = FinancialConstants::BASIS_DAYS_PER_YEAR_NASD
+        $settlement,
+        $maturity,
+        $issue,
+        $rate,
+        $price,
+        $basis = FinancialConstants::BASIS_DAYS_PER_YEAR_NASD
     ) {
         $settlement = Functions::flattenSingleValue($settlement);
         $maturity = Functions::flattenSingleValue($maturity);
@@ -130,25 +129,25 @@ class Yields
         $daysBetweenIssueAndSettlement = Functions::scalar(DateTimeExcel\YearFrac::fraction($issue, $settlement, $basis));
         if (!is_numeric($daysBetweenIssueAndSettlement)) {
             //    return date error
-            return StringHelper::convertToString($daysBetweenIssueAndSettlement);
+            return $daysBetweenIssueAndSettlement;
         }
         $daysBetweenIssueAndSettlement *= $daysPerYear;
         $daysBetweenIssueAndMaturity = Functions::scalar(DateTimeExcel\YearFrac::fraction($issue, $maturity, $basis));
         if (!is_numeric($daysBetweenIssueAndMaturity)) {
             //    return date error
-            return StringHelper::convertToString($daysBetweenIssueAndMaturity);
+            return $daysBetweenIssueAndMaturity;
         }
         $daysBetweenIssueAndMaturity *= $daysPerYear;
         $daysBetweenSettlementAndMaturity = Functions::scalar(DateTimeExcel\YearFrac::fraction($settlement, $maturity, $basis));
         if (!is_numeric($daysBetweenSettlementAndMaturity)) {
             //    return date error
-            return StringHelper::convertToString($daysBetweenSettlementAndMaturity);
+            return $daysBetweenSettlementAndMaturity;
         }
         $daysBetweenSettlementAndMaturity *= $daysPerYear;
 
-        return ((1 + (($daysBetweenIssueAndMaturity / $daysPerYear) * $rate)
-                    - (($price / 100) + (($daysBetweenIssueAndSettlement / $daysPerYear) * $rate)))
-                / (($price / 100) + (($daysBetweenIssueAndSettlement / $daysPerYear) * $rate)))
-            * ($daysPerYear / $daysBetweenSettlementAndMaturity);
+        return ((1 + (($daysBetweenIssueAndMaturity / $daysPerYear) * $rate) -
+                    (($price / 100) + (($daysBetweenIssueAndSettlement / $daysPerYear) * $rate))) /
+                (($price / 100) + (($daysBetweenIssueAndSettlement / $daysPerYear) * $rate))) *
+            ($daysPerYear / $daysBetweenSettlementAndMaturity);
     }
 }

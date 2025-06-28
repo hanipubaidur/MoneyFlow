@@ -4,6 +4,7 @@ namespace PhpOffice\PhpSpreadsheet\Calculation\LookupRef;
 
 use PhpOffice\PhpSpreadsheet\Calculation\ArrayEnabled;
 use PhpOffice\PhpSpreadsheet\Calculation\Information\ExcelError;
+use PhpOffice\PhpSpreadsheet\Calculation\LookupRef;
 
 class Lookup
 {
@@ -19,7 +20,7 @@ class Lookup
      *
      * @return mixed The value of the found cell
      */
-    public static function lookup(mixed $lookupValue, mixed $lookupVector, $resultVector = null): mixed
+    public static function lookup($lookupValue, $lookupVector, $resultVector = null)
     {
         if (is_array($lookupValue)) {
             return self::evaluateArrayArgumentsSubset([self::class, __FUNCTION__], 1, $lookupValue, $lookupVector, $resultVector);
@@ -28,27 +29,23 @@ class Lookup
         if (!is_array($lookupVector)) {
             return ExcelError::NA();
         }
-        /** @var mixed[][] $lookupVector */
         $hasResultVector = isset($resultVector);
         $lookupRows = self::rowCount($lookupVector);
         $lookupColumns = self::columnCount($lookupVector);
         // we correctly orient our results
         if (($lookupRows === 1 && $lookupColumns > 1) || (!$hasResultVector && $lookupRows === 2 && $lookupColumns !== 2)) {
-            $lookupVector = Matrix::transpose($lookupVector);
+            $lookupVector = LookupRef\Matrix::transpose($lookupVector);
             $lookupRows = self::rowCount($lookupVector);
-            /** @var mixed[][] $lookupVector */
             $lookupColumns = self::columnCount($lookupVector);
         }
 
-        $resultVector = self::verifyResultVector($resultVector ?? $lookupVector); //* @phpstan-ignore-line
+        $resultVector = self::verifyResultVector($resultVector ?? $lookupVector);
 
         if ($lookupRows === 2 && !$hasResultVector) {
             $resultVector = array_pop($lookupVector);
             $lookupVector = array_shift($lookupVector);
         }
 
-        /** @var mixed[] $lookupVector */
-        /** @var mixed[] $resultVector */
         if ($lookupColumns !== 2) {
             $lookupVector = self::verifyLookupValues($lookupVector, $resultVector);
         }
@@ -56,12 +53,6 @@ class Lookup
         return VLookup::lookup($lookupValue, $lookupVector, 2);
     }
 
-    /**
-     * @param mixed[] $lookupVector
-     * @param mixed[] $resultVector
-     *
-     * @return mixed[]
-     */
     private static function verifyLookupValues(array $lookupVector, array $resultVector): array
     {
         foreach ($lookupVector as &$value) {
@@ -87,11 +78,6 @@ class Lookup
         return $lookupVector;
     }
 
-    /**
-     * @param mixed[][] $resultVector
-     *
-     * @return mixed[]
-     */
     private static function verifyResultVector(array $resultVector): array
     {
         $resultRows = self::rowCount($resultVector);
@@ -99,19 +85,17 @@ class Lookup
 
         // we correctly orient our results
         if ($resultRows === 1 && $resultColumns > 1) {
-            $resultVector = Matrix::transpose($resultVector);
+            $resultVector = LookupRef\Matrix::transpose($resultVector);
         }
 
         return $resultVector;
     }
 
-    /** @param mixed[] $dataArray */
     private static function rowCount(array $dataArray): int
     {
         return count($dataArray);
     }
 
-    /** @param mixed[][] $dataArray */
     private static function columnCount(array $dataArray): int
     {
         $rowKeys = array_keys($dataArray);

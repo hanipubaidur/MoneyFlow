@@ -24,11 +24,11 @@ class Tcpdf extends Pdf
      *
      * @param string $orientation Page orientation
      * @param string $unit Unit measure
-     * @param float[]|string $paperSize Paper size
+     * @param array|string $paperSize Paper size
      *
      * @return \TCPDF implementation
      */
-    protected function createExternalWriterInstance(string $orientation, string $unit, $paperSize): \TCPDF
+    protected function createExternalWriterInstance($orientation, $unit, $paperSize)
     {
         return new \TCPDF($orientation, $unit, $paperSize);
     }
@@ -50,7 +50,7 @@ class Tcpdf extends Pdf
         $orientation = $this->getOrientation() ?? $setup->getOrientation();
         $orientation = ($orientation === PageSetup::ORIENTATION_LANDSCAPE) ? 'L' : 'P';
         $printPaperSize = $this->getPaperSize() ?? $setup->getPaperSize();
-        $paperSize = self::$paperSizes[$printPaperSize] ?? self::$paperSizes[PageSetup::getPaperSizeDefault()] ?? 'LETTER';
+        $paperSize = self::$paperSizes[$printPaperSize] ?? PageSetup::getPaperSizeDefault();
         $printMargins = $this->spreadsheet->getSheet($this->getSheetIndex() ?? 0)->getPageMargins();
 
         //  Create PDF

@@ -32,11 +32,11 @@ class Floor
      * @param mixed $significance Expect float. Significance
      *                      Or can be an array of values
      *
-     * @return array<mixed>|float|string Rounded Number, or a string containing an error
+     * @return array|float|string Rounded Number, or a string containing an error
      *         If an array of numbers is passed as an argument, then the returned result will also be an array
      *            with the same dimensions
      */
-    public static function floor(mixed $number, mixed $significance = null)
+    public static function floor($number, $significance = null)
     {
         if (is_array($number) || is_array($significance)) {
             return self::evaluateArrayArguments([self::class, __FUNCTION__], $number, $significance);
@@ -71,11 +71,11 @@ class Floor
      * @param mixed $mode direction to round negative numbers
      *                      Or can be an array of values
      *
-     * @return array<mixed>|float|string Rounded Number, or a string containing an error
+     * @return array|float|string Rounded Number, or a string containing an error
      *         If an array of numbers is passed as an argument, then the returned result will also be an array
      *            with the same dimensions
      */
-    public static function math(mixed $number, mixed $significance = null, mixed $mode = 0, bool $checkSigns = false)
+    public static function math($number, $significance = null, $mode = 0)
     {
         if (is_array($number) || is_array($significance) || is_array($mode)) {
             return self::evaluateArrayArguments([self::class, __FUNCTION__], $number, $significance, $mode);
@@ -89,35 +89,7 @@ class Floor
             return $e->getMessage();
         }
 
-        if (empty($significance * $number)) {
-            return 0.0;
-        }
-        if ($checkSigns) {
-            if (($number > 0 && $significance < 0) || ($number < 0 && $significance > 0)) {
-                return ExcelError::NAN();
-            }
-        }
-
         return self::argsOk((float) $number, (float) $significance, (int) $mode);
-    }
-
-    /**
-     * FLOOR.ODS, pseudo-function - FLOOR as implemented in ODS.
-     *
-     * Round a number down to the nearest integer or to the nearest multiple of significance.
-     *
-     * ODS Function (theoretical):
-     *        FLOOR.ODS(number[,significance[,mode]])
-     *
-     * @param mixed $number Number to round
-     * @param mixed $significance Significance
-     * @param array<mixed>|int $mode direction to round negative numbers
-     *
-     * @return array<mixed>|float|string Rounded Number, or a string containing an error
-     */
-    public static function mathOds(mixed $number, mixed $significance = null, mixed $mode = 0)
-    {
-        return self::math($number, $significance, $mode, true);
     }
 
     /**
@@ -128,12 +100,12 @@ class Floor
      * Excel Function:
      *        FLOOR.PRECISE(number[,significance])
      *
-     * @param array<mixed>|float $number Number to round
+     * @param array|float $number Number to round
      *                      Or can be an array of values
-     * @param array<mixed>|float $significance Significance
+     * @param array|float $significance Significance
      *                      Or can be an array of values
      *
-     * @return array<mixed>|float|string Rounded Number, or a string containing an error
+     * @return array|float|string Rounded Number, or a string containing an error
      *         If an array of numbers is passed as an argument, then the returned result will also be an array
      *            with the same dimensions
      */
@@ -149,17 +121,16 @@ class Floor
         } catch (Exception $e) {
             return $e->getMessage();
         }
-        if (!$significance) {
-            return 0.0;
-        }
 
         return self::argumentsOkPrecise((float) $number, (float) $significance);
     }
 
     /**
      * Avoid Scrutinizer problems concerning complexity.
+     *
+     * @return float|string
      */
-    private static function argumentsOkPrecise(float $number, float $significance): string|float
+    private static function argumentsOkPrecise(float $number, float $significance)
     {
         if ($significance == 0.0) {
             return ExcelError::DIV0();
@@ -176,7 +147,7 @@ class Floor
      *
      * @return float|string Rounded Number, or a string containing an error
      */
-    private static function argsOk(float $number, float $significance, int $mode): string|float
+    private static function argsOk(float $number, float $significance, int $mode)
     {
         if (!$significance) {
             return ExcelError::DIV0();
@@ -201,8 +172,10 @@ class Floor
 
     /**
      * Avoid Scrutinizer problems concerning complexity.
+     *
+     * @return float|string
      */
-    private static function argumentsOk(float $number, float $significance): string|float
+    private static function argumentsOk(float $number, float $significance)
     {
         if ($significance == 0.0) {
             return ExcelError::DIV0();
@@ -210,12 +183,10 @@ class Floor
         if ($number == 0.0) {
             return 0.0;
         }
-        $signSig = Helpers::returnSign($significance);
-        $signNum = Helpers::returnSign($number);
-        if (
-            ($signSig === 1 && ($signNum === 1 || Functions::getCompatibilityMode() !== Functions::COMPATIBILITY_GNUMERIC))
-            || ($signNum === -1 && $signSig === -1)
-        ) {
+        if (Helpers::returnSign($significance) == 1) {
+            return floor($number / $significance) * $significance;
+        }
+        if (Helpers::returnSign($number) == -1 && Helpers::returnSign($significance) == -1) {
             return floor($number / $significance) * $significance;
         }
 

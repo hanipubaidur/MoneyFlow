@@ -20,7 +20,7 @@ class Size
      *
      * @return float|string The result, or a string containing an error
      */
-    public static function large(mixed ...$args)
+    public static function large(...$args)
     {
         $aArgs = Functions::flattenArray($args);
         $entry = array_pop($aArgs);
@@ -35,7 +35,6 @@ class Size
                 return ExcelError::NAN();
             }
             rsort($mArgs);
-            /** @var float[] $mArgs */
 
             return $mArgs[$entry];
         }
@@ -56,7 +55,7 @@ class Size
      *
      * @return float|string The result, or a string containing an error
      */
-    public static function small(mixed ...$args)
+    public static function small(...$args)
     {
         $aArgs = Functions::flattenArray($args);
 
@@ -72,7 +71,6 @@ class Size
                 return ExcelError::NAN();
             }
             sort($mArgs);
-            /** @var float[] $mArgs */
 
             return $mArgs[$entry];
         }
@@ -82,8 +80,6 @@ class Size
 
     /**
      * @param mixed[] $args Data values
-     *
-     * @return mixed[]
      */
     protected static function filter(array $args): array
     {

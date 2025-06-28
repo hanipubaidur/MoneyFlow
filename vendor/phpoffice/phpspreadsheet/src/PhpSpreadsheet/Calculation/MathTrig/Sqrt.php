@@ -16,11 +16,11 @@ class Sqrt
      *
      * @param mixed $number Should be numeric, or can be an array of numbers
      *
-     * @return array<mixed>|float|string square root
+     * @return array|float|string square root
      *         If an array of numbers is passed as the argument, then the returned result will also be an array
      *            with the same dimensions
      */
-    public static function sqrt(mixed $number)
+    public static function sqrt($number)
     {
         if (is_array($number)) {
             return self::evaluateSingleArgumentArray([self::class, __FUNCTION__], $number);
@@ -40,13 +40,13 @@ class Sqrt
      *
      * Returns the square root of (number * pi).
      *
-     * @param array<mixed>|float $number Number, or can be an array of numbers
+     * @param array|float $number Number, or can be an array of numbers
      *
-     * @return array<mixed>|float|string Square Root of Number * Pi, or a string containing an error
+     * @return array|float|string Square Root of Number * Pi, or a string containing an error
      *         If an array of numbers is passed as the argument, then the returned result will also be an array
      *            with the same dimensions
      */
-    public static function pi($number): array|string|float
+    public static function pi($number)
     {
         if (is_array($number)) {
             return self::evaluateSingleArgumentArray([self::class, __FUNCTION__], $number);

@@ -4,15 +4,17 @@ namespace PhpOffice\PhpSpreadsheet\Cell;
 
 class IgnoredErrors
 {
-    private bool $numberStoredAsText = false;
+    /** @var bool */
+    private $numberStoredAsText = false;
 
-    private bool $formula = false;
+    /** @var bool */
+    private $formula = false;
 
-    private bool $formulaRange = false;
+    /** @var bool */
+    private $twoDigitTextYear = false;
 
-    private bool $twoDigitTextYear = false;
-
-    private bool $evalError = false;
+    /** @var bool */
+    private $evalError = false;
 
     public function setNumberStoredAsText(bool $value): self
     {
@@ -36,18 +38,6 @@ class IgnoredErrors
     public function getFormula(): bool
     {
         return $this->formula;
-    }
-
-    public function setFormulaRange(bool $value): self
-    {
-        $this->formulaRange = $value;
-
-        return $this;
-    }
-
-    public function getFormulaRange(): bool
-    {
-        return $this->formulaRange;
     }
 
     public function setTwoDigitTextYear(bool $value): self
