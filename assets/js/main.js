@@ -58,9 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load other components
     loadSavingsData();
     loadRecentTransactions();
-
-    // Add monthly comparison chart load
-    loadMonthlyComparison();
 });
 
 // Fungsi untuk load semua data sekaligus
