@@ -1,13 +1,16 @@
 <?php
 require_once 'config/database.php';
 
-function getPeriodLabelForAjax($period) {
-    $date = date('Y-m-d');
+function getPeriodLabelForAjax($period, $date = null) {
+    $date = $date ?: date('Y-m-d');
     switch($period) {
         case 'day': return "Today, " . date('d M Y', strtotime($date));
         case 'week': return "This Week";
         case 'month': return "This Month (" . date('F Y', strtotime($date)) . ")";
         case 'year': return "This Year (" . date('Y', strtotime($date)) . ")";
+        case 'date': 
+            $d = date('d/m/Y', strtotime($date));
+            return "Selected Date: " . $d;
         default: return '';
     }
 }
@@ -15,6 +18,7 @@ function getPeriodLabelForAjax($period) {
 // --- AJAX HANDLER ---
 if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
     $period = $_GET['period'] ?? 'month';
+    $selectedDate = $_GET['date'] ?? null;
     $db = new Database();
     $conn = $db->getConnection();
     $where_clause = "";
@@ -23,6 +27,10 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
         case 'week': $where_clause = "YEARWEEK(t.date, 1) = YEARWEEK(CURRENT_DATE, 1)"; break;
         case 'month': $where_clause = "DATE_FORMAT(t.date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')"; break;
         case 'year': $where_clause = "YEAR(t.date) = YEAR(CURRENT_DATE)"; break;
+        case 'date':
+            $date = $selectedDate ?: date('Y-m-d');
+            $where_clause = "DATE(t.date) = " . $conn->quote($date);
+            break;
         default: $where_clause = "DATE_FORMAT(t.date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')";
     }
     
@@ -42,7 +50,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
     
     // Data JSON sekarang tidak lagi berisi account_balances
     $data = [
-        'periodLabel' => getPeriodLabelForAjax($period),
+        'periodLabel' => getPeriodLabelForAjax($period, $selectedDate),
         'metrics' => [
             'net_cashflow' => $metrics['total_income'] - $metrics['total_expense'],
             'savings_rate' => $metrics['total_income'] > 0 ? ($metrics['savings_amount'] / $metrics['total_income'] * 100) : 0,
@@ -85,8 +93,30 @@ ob_start();
             <button type="button" class="btn btn-sm btn-outline-primary" data-period="week">Week</button>
             <button type="button" class="btn btn-sm btn-outline-primary active" data-period="month">Month</button>
             <button type="button" class="btn btn-sm btn-outline-primary" data-period="year">Year</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="selectDateBtn">Select Date</button>
         </div>
     </div>
+</div>
+<!-- Modal Custom Date Picker -->
+<div class="modal fade" id="customDateModal" tabindex="-1" aria-labelledby="customDateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="customDateModalLabel">Select Date</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="d-flex justify-content-center align-items-center gap-2">
+          <select id="customDateDay" class="form-select form-select-sm" style="width:auto"></select>
+          <select id="customDateMonth" class="form-select form-select-sm" style="width:auto"></select>
+          <select id="customDateYear" class="form-select form-select-sm" style="width:auto"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="showDateBtn">Show</button>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3"><div class="card bg-primary text-white h-100"><div class="card-body"><h6>Net Cash Flow</h6><h3 id="netCashflow" class="mb-0">Rp 0</h3></div></div></div>
