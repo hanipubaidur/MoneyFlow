@@ -3,17 +3,8 @@
 ![Last Commit](https://img.shields.io/github/last-commit/hanipubaidur/MoneyFlow?style=flat-square)
 
 ## 📝 Latest Updates
-- 🟢 "Account" column (source/destination) now shown in all transactions & exports
-- 🟣 Category, income source, and account display is cleaner & inline editable
-- 🟡 Savings target validation: input exceeding target only fills the gap
-- 🔵 Excel Export: complete transaction data (account, description, etc) & auto summary
-- 🟠 Dashboard: cashflow breakdown, expense, and more informative status badges
-- 🟤 Soft/hard delete for categories & accounts based on usage
-- 🟤 **Category cannot be hard deleted if still used in monthly summaries; will be soft deleted instead**
-- 🟤 Improved form validation for transactions, savings, and progress bar animation
-- 🟢 Responsive, cleaner UI for tables & lists (categories, accounts, transactions, etc)
-- 🟣 **Report breakdown tables now show empty message and always display total in footer**
-- 🟠 **Expense category color is now fully customizable and shown in charts**
+- 🟢 **Custom date picker for analytics and report: select any date, see data for that day**
+- 🟢 **Income/Expense in dashboard and report now always show 0 if no data for selected date**
 
 <div align="center">
   
@@ -46,7 +37,7 @@ Track your income, expenses, savings targets, and account balances with ease.
 ## 🚀 Main Features
 
 - **Dashboard Overview:**  
-  See your balance, income, expenses, and ratios in real-time with animated breakdowns by period (daily, weekly, monthly, yearly).
+  See your balance, income, expenses, and ratios in real-time with animated breakdowns by period (daily, weekly, monthly, yearly) **or by custom date**.
 
 - **Transaction Recording:**  
   Log income (cash, transfer, e-wallet) and expenses (categories, savings, etc) with easy selection.
@@ -59,7 +50,8 @@ Track your income, expenses, savings targets, and account balances with ease.
   - **Custom color for each expense category, shown in expense charts**
 
 - **Reports & Analysis:**  
-  Full financial reports, cashflow charts, category breakdowns, monthly analytics, and Excel export.
+  Full financial reports, cashflow charts, category breakdowns, monthly analytics, and Excel export.  
+  **Select any date to see report and analytics for that day. If no data, income/expense will show 0.**
 
 - **Responsive & User Friendly:**  
   Modern UI, works great on both mobile and desktop.
