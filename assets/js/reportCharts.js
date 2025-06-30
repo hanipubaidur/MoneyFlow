@@ -85,29 +85,110 @@ document.addEventListener('DOMContentLoaded', function() {
     loadReportPageData('month');
 
     const periodSelector = document.getElementById('reportPeriodSelector');
+    let selectedDate = null;
+
     if (periodSelector) {
         periodSelector.addEventListener('click', function(e) {
             const button = e.target.closest('[data-period]');
-            if (!button || button.classList.contains('active')) return;
-            this.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            loadReportPageData(button.dataset.period);
+            if (button) {
+                if (button.classList.contains('active')) return;
+                this.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                selectedDate = null;
+                loadReportPageData(button.dataset.period);
+            }
+            // Handle Select Date button
+            if (e.target.id === 'selectDateBtn') {
+                showCustomDateModal();
+            }
         });
     }
+
+    // Modal Custom Date Picker
+    function showCustomDateModal() {
+        const modal = new bootstrap.Modal(document.getElementById('customDateModal'));
+        populateCustomDatePicker();
+        modal.show();
+    }
+
+    function populateCustomDatePicker() {
+        const daySel = document.getElementById('customDateDay');
+        const monthSel = document.getElementById('customDateMonth');
+        const yearSel = document.getElementById('customDateYear');
+        const now = new Date();
+        // Tahun: 5 tahun ke belakang sampai tahun ini
+        yearSel.innerHTML = '';
+        for (let y = now.getFullYear(); y >= now.getFullYear() - 5; y--) {
+            yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+        }
+        // Bulan
+        monthSel.innerHTML = '';
+        for (let m = 1; m <= 12; m++) {
+            monthSel.innerHTML += `<option value="${m}">${m.toString().padStart(2, '0')}</option>`;
+        }
+        // Hari (default 31, akan diubah saat bulan/tahun berubah)
+        updateCustomDateDays();
+
+        yearSel.onchange = monthSel.onchange = updateCustomDateDays;
+        function updateCustomDateDays() {
+            const year = parseInt(yearSel.value);
+            const month = parseInt(monthSel.value);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            daySel.innerHTML = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                daySel.innerHTML += `<option value="${d}">${d.toString().padStart(2, '0')}</option>`;
+            }
+        }
+        // Set default ke hari ini
+        yearSel.value = now.getFullYear();
+        monthSel.value = now.getMonth() + 1;
+        daySel.value = now.getDate();
+    }
+
+    document.getElementById('showDateBtn').addEventListener('click', function() {
+        const day = document.getElementById('customDateDay').value.padStart(2, '0');
+        const month = document.getElementById('customDateMonth').value.padStart(2, '0');
+        const year = document.getElementById('customDateYear').value;
+        selectedDate = `${year}-${month}-${day}`; // tetap kirim ke backend yyyy-mm-dd
+        // Remove active from all period buttons
+        document.querySelectorAll('#reportPeriodSelector [data-period]').forEach(btn => btn.classList.remove('active'));
+        // Hide modal
+        bootstrap.Modal.getInstance(document.getElementById('customDateModal')).hide();
+        loadReportPageData('date', selectedDate);
+    });
 });
 
-async function loadReportPageData(period) {
+// Ubah loadReportPageData agar bisa menerima tanggal
+async function loadReportPageData(period, date = null) {
     try {
-        const response = await fetch(`reports.php?ajax=1&period=${period}`);
+        let url = `reports.php?ajax=1&period=${period}`;
+        if (period === 'date' && date) url += `&date=${date}`;
+        const response = await fetch(url);
         const data = await response.json();
-        
+
         updatePeriodLabel(data.periodLabel);
         updateMetrics(data.metrics);
-        // Panggilan ke updateAccountBalances DIHAPUS
         updateBreakdownTables(data.breakdowns);
+
+        // Tampilkan pesan jika tidak ada data
+        showNoDataIfNeeded(data);
 
     } catch (error) {
         console.error('Failed to load report data:', error);
+    }
+}
+
+// Tampilkan pesan jika tidak ada data
+function showNoDataIfNeeded(data) {
+    // Cek semua metrik dan breakdown kosong
+    const noIncome = !data.breakdowns.income.length;
+    const noExpense = !data.breakdowns.expense.length;
+    const noCashflow = !data.metrics || (data.metrics.net_cashflow === 0 && data.metrics.savings_rate === 0 && data.metrics.expense_ratio === 0 && data.metrics.debt_ratio === 0);
+    if (noIncome && noExpense && noCashflow) {
+        document.getElementById('incomeBreakdownBody').innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data found.</td></tr>';
+        document.getElementById('incomeBreakdownFoot').innerHTML = '';
+        document.getElementById('expenseBreakdownBody').innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data found.</td></tr>';
+        document.getElementById('expenseBreakdownFoot').innerHTML = '';
     }
 }
 

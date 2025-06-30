@@ -13,7 +13,21 @@ try {
     $period = $_GET['period'] ?? 'month';
 
     if ($type === 'flow') {
+        $date = $_GET['date'] ?? null;
         switch($period) {
+            case 'date':
+                $dateVal = $date ?: date('Y-m-d');
+                $query = "SELECT 
+                    DATE_FORMAT(date, '%d %b') as label,
+                    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
+                    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
+                    FROM transactions 
+                    WHERE DATE(date) = " . $conn->quote($dateVal) . "
+                    AND status != 'deleted'
+                    GROUP BY DATE(date)
+                    ORDER BY date ASC";
+                break;
+
             case 'day':
                 // Show all days in current month
                 $query = "SELECT 
@@ -85,12 +99,14 @@ try {
         ]);
     } 
     elseif ($type === 'category') {
+        $date = $_GET['date'] ?? null;
         // Perbaiki where clause untuk 'week'
         $where_clause = match($period) {
             'day' => "DATE(t.date) = CURRENT_DATE",
             'week' => "YEARWEEK(t.date) = YEARWEEK(CURRENT_DATE)",
             'month' => "DATE_FORMAT(t.date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')",
             'year' => "YEAR(t.date) = YEAR(CURRENT_DATE)",
+            'date' => "DATE(t.date) = " . $conn->quote($date ?: date('Y-m-d')),
             default => "DATE_FORMAT(t.date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')"
         };
 
