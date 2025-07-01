@@ -95,8 +95,19 @@ async function loadChartData(period) {
         const flowData = await flowResponse.json();
         const categoryData = await categoryResponse.json();
 
+        // Tambahkan log untuk debug
         console.log('Flow data:', flowData);
-        console.log('Category data:', categoryData);
+
+        // Cek jika week 5 income tidak 0, tampilkan warning
+        if (period === 'week' && flowData && flowData.dates && flowData.income) {
+            const week5Idx = flowData.dates.findIndex(label => label.toLowerCase().includes('week 5'));
+            if (week5Idx !== -1) {
+                console.log('DEBUG: Income Week 5:', flowData.income[week5Idx]);
+                if (flowData.income[week5Idx] !== 0) {
+                    alert('WARNING: Income Week 5 dari API bukan 0! Cek backend dan data!');
+                }
+            }
+        }
 
         // Hide loading, show charts
         if (chartLoading) chartLoading.style.display = 'none';
@@ -116,6 +127,9 @@ async function loadChartData(period) {
 
 // Perbaiki update untuk cash flow chart
 function updateCashFlowChart(data) {
+    // Tambahkan log untuk debug
+    console.log('updateCashFlowChart data:', data);
+
     const ctx = document.getElementById('cashFlowChart');
     if (!ctx) {
         console.error('Cash flow chart canvas not found');
@@ -475,7 +489,10 @@ async function loadDashboardStats(period) {
         showLoading();
         const response = await fetch(`api/dashboard_stats.php?period=${period}`);
         const data = await response.json();
-        
+
+        // Tambahkan log untuk debug
+        console.log('Dashboard stats data:', data);
+
         if (data.success) {
             // Update period labels
             document.querySelectorAll('.periodLabel').forEach(el => {
