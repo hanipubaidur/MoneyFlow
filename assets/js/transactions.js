@@ -212,7 +212,22 @@ function editTransaction(id) {
                 idInput.name = 'transaction_id';
                 form.appendChild(idInput);
             }
-            form.querySelector('[name="transaction_id"]').value = id;
+            form.querySelector('[name="transaction_id"]').value = data.transaction_id || id;
+
+            // Add pair_id for transfer edit
+            if (data.type === 'transfer') {
+                if (!form.querySelector('[name="pair_id"]')) {
+                    const pairInput = document.createElement('input');
+                    pairInput.type = 'hidden';
+                    pairInput.name = 'pair_id';
+                    form.appendChild(pairInput);
+                }
+                form.querySelector('[name="pair_id"]').value = data.pair_id;
+            } else {
+                // Remove pair_id if not transfer
+                const pairInput = form.querySelector('[name="pair_id"]');
+                if (pairInput) pairInput.remove();
+            }
 
             // Scroll to form
             form.scrollIntoView({ behavior: 'smooth' });
@@ -273,6 +288,13 @@ async function handleFormSubmit(e) {
             if (from === to) throw new Error('Transfer source and destination must be different');
             formData.append('transfer_from', from);
             formData.append('transfer_to', to);
+            // Tambahkan id untuk edit transfer jika ada
+            if (form.querySelector('[name="transaction_id"]')) {
+                formData.append('transaction_id', form.querySelector('[name="transaction_id"]').value);
+            }
+            if (form.querySelector('[name="pair_id"]')) {
+                formData.append('pair_id', form.querySelector('[name="pair_id"]').value);
+            }
         } else {
             // Check if this is a savings transaction
             const categoryOption = form.querySelector('select[name="category"]').selectedOptions[0];
