@@ -18,6 +18,36 @@ try {
         $to = $_POST['transfer_to'];
         if ($from == $to) throw new Exception('Transfer source and destination must be different');
 
+        // Edit transfer
+        if (!empty($_POST['transaction_id']) && !empty($_POST['pair_id'])) {
+            $trxId = $_POST['transaction_id'];
+            $pairId = $_POST['pair_id'];
+            $conn->beginTransaction();
+            try {
+                // Update expense (from)
+                $query1 = "UPDATE transactions SET amount=?, date=?, description=?, account_id=? WHERE id=? AND type='expense'";
+                $stmt1 = $conn->prepare($query1);
+                if (!$stmt1->execute([$amount, $date, $description, $from, $trxId])) {
+                    throw new Exception('Failed to update transfer (from)');
+                }
+                // Update income (to)
+                $query2 = "UPDATE transactions SET amount=?, date=?, description=?, account_id=? WHERE id=? AND type='income'";
+                $stmt2 = $conn->prepare($query2);
+                if (!$stmt2->execute([$amount, $date, $description, $to, $pairId])) {
+                    throw new Exception('Failed to update transfer (to)');
+                }
+                $conn->commit();
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Transfer updated successfully'
+                ]);
+            } catch(Exception $e) {
+                $conn->rollBack();
+                throw $e;
+            }
+            exit;
+        }
+
         $conn->beginTransaction();
         try {
             // Insert expense (from)
