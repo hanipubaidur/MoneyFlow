@@ -19,8 +19,16 @@ try {
                 $dateVal = $date ?: date('Y-m-d');
                 $query = "SELECT 
                     DATE_FORMAT(date, '%d %b') as label,
-                    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
-                    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
+                    SUM(CASE 
+                        WHEN type = 'income' 
+                            AND income_source_id IS NOT NULL 
+                            AND (expense_category_id IS NULL OR expense_category_id = 0)
+                        THEN amount ELSE 0 END) as income,
+                    SUM(CASE 
+                        WHEN type = 'expense' 
+                            AND expense_category_id IS NOT NULL 
+                            AND (income_source_id IS NULL OR income_source_id = 0)
+                        THEN amount ELSE 0 END) as expense
                     FROM transactions 
                     WHERE DATE(date) = " . $conn->quote($dateVal) . "
                     AND status != 'deleted'
@@ -32,8 +40,16 @@ try {
                 // Show all days in current month
                 $query = "SELECT 
                     DATE_FORMAT(date, '%d %b') as label,
-                    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
-                    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
+                    SUM(CASE 
+                        WHEN type = 'income' 
+                            AND income_source_id IS NOT NULL 
+                            AND (expense_category_id IS NULL OR expense_category_id = 0)
+                        THEN amount ELSE 0 END) as income,
+                    SUM(CASE 
+                        WHEN type = 'expense' 
+                            AND expense_category_id IS NOT NULL 
+                            AND (income_source_id IS NULL OR income_source_id = 0)
+                        THEN amount ELSE 0 END) as expense
                     FROM transactions 
                     WHERE DATE_FORMAT(date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')
                     AND status != 'deleted'
@@ -46,11 +62,20 @@ try {
                 $query = "SELECT 
                     CONCAT('Week ', 
                         FLOOR((DAYOFMONTH(date)-1)/7) + 1) as label,
-                    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
-                    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
+                    SUM(CASE 
+                        WHEN type = 'income' 
+                            AND income_source_id IS NOT NULL 
+                            AND (expense_category_id IS NULL OR expense_category_id = 0)
+                        THEN amount ELSE 0 END) as income,
+                    SUM(CASE 
+                        WHEN type = 'expense' 
+                            AND expense_category_id IS NOT NULL 
+                            AND (income_source_id IS NULL OR income_source_id = 0)
+                        THEN amount ELSE 0 END) as expense
                     FROM transactions 
                     WHERE DATE_FORMAT(date, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m')
                     AND status != 'deleted'
+                    AND type IN ('income', 'expense')
                     GROUP BY FLOOR((DAYOFMONTH(date)-1)/7)
                     ORDER BY MIN(date) ASC";
                 break;
@@ -59,8 +84,16 @@ try {
                 // Show all months in current year
                 $query = "SELECT 
                     DATE_FORMAT(date, '%M') as label,
-                    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
-                    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
+                    SUM(CASE 
+                        WHEN type = 'income' 
+                            AND income_source_id IS NOT NULL 
+                            AND (expense_category_id IS NULL OR expense_category_id = 0)
+                        THEN amount ELSE 0 END) as income,
+                    SUM(CASE 
+                        WHEN type = 'expense' 
+                            AND expense_category_id IS NOT NULL 
+                            AND (income_source_id IS NULL OR income_source_id = 0)
+                        THEN amount ELSE 0 END) as expense
                     FROM transactions 
                     WHERE YEAR(date) = YEAR(CURRENT_DATE)
                     AND status != 'deleted'
@@ -75,8 +108,16 @@ try {
                 $endYear = $currentYear + 3;
                 $query = "SELECT 
                     YEAR(date) as label,
-                    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
-                    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
+                    SUM(CASE 
+                        WHEN type = 'income' 
+                            AND income_source_id IS NOT NULL 
+                            AND (expense_category_id IS NULL OR expense_category_id = 0)
+                        THEN amount ELSE 0 END) as income,
+                    SUM(CASE 
+                        WHEN type = 'expense' 
+                            AND expense_category_id IS NOT NULL 
+                            AND (income_source_id IS NULL OR income_source_id = 0)
+                        THEN amount ELSE 0 END) as expense
                     FROM transactions 
                     WHERE YEAR(date) BETWEEN $startYear AND $endYear
                     AND status != 'deleted'
@@ -345,8 +386,11 @@ function fillMissingPeriods($data, $period) {
             break;
 
         case 'week':
-            // Fill all weeks in current month (usually 4-5 weeks)
-            $numWeeks = ceil($today->format('t') / 7);
+            // Always fill 5 weeks for months with 29-31 days
+            $daysInMonth = intval($today->format('t'));
+            $numWeeks = ceil($daysInMonth / 7);
+            // Ensure at least 4, at most 5 weeks
+            $numWeeks = max(4, min(5, $numWeeks));
             for($w = 1; $w <= $numWeeks; $w++) {
                 $weekLabel = "Week " . $w;
                 $found = false;
