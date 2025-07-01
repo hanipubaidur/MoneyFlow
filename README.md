@@ -4,7 +4,9 @@
 
 ## 📝 Latest Updates
 - 🟢 **Custom date picker for analytics and report: select any date, see data for that day**
-- 🟢 **Income/Expense in dashboard and report now always show 0 if no data for selected date**
+- 🟢 **Income/Expense in dashboard and report now always show 0 if no data for selected period (day/week/month/year)**
+- 🟢 **Transfer transactions are never counted as income/expense in any chart or dashboard stats**
+- 🟢 **Weekly chart and stats use date-based week (Week 1 = tgl 1-7, Week 2 = tgl 8-14, dst)**
 
 <div align="center">
   
@@ -38,9 +40,12 @@ Track your income, expenses, savings targets, and account balances with ease.
 
 - **Dashboard Overview:**  
   See your balance, income, expenses, and ratios in real-time with animated breakdowns by period (daily, weekly, monthly, yearly) **or by custom date**.
+  - **If there are no transactions in the selected period, income/expense will always show 0.**
+  - **Weekly stats and charts use date-based weeks (Week 1 = tgl 1-7, Week 2 = tgl 8-14, etc).**
 
 - **Transaction Recording:**  
   Log income (cash, transfer, e-wallet) and expenses (categories, savings, etc) with easy selection.
+  - **Transfer transactions are never counted as income or expense in any chart/stat.**
 
 - **Account Management:**  
   Add/edit/deactivate accounts (bank, e-wallet, cash) and manage all your money sources.
