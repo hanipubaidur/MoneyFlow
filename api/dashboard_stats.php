@@ -38,11 +38,13 @@ try {
         (SELECT COALESCE(SUM(amount), 0)
          FROM transactions 
          WHERE type = 'income' AND status = 'completed'
+         AND (income_source_id IS NOT NULL OR expense_category_id IS NOT NULL)
          AND $where_clause) as period_income,
          
         (SELECT COALESCE(SUM(amount), 0)
          FROM transactions 
          WHERE type = 'expense' AND status = 'completed'
+         AND (income_source_id IS NOT NULL OR expense_category_id IS NOT NULL)
          AND $where_clause) as period_expenses,
          
         (SELECT COALESCE(SUM(t.amount), 0)
