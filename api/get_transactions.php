@@ -53,6 +53,7 @@ try {
                 ) {
                     $result[] = [
                         'id' => $row['id'],
+                        'pair_id' => $row2['id'],
                         'date' => $row['date'],
                         'type' => 'transfer',
                         'amount' => $row['amount'],
@@ -67,7 +68,7 @@ try {
                     break;
                 }
             }
-        } elseif ($row['category'] !== 'transfer_in') {
+        } elseif ($row['category'] !== 'transfer_in' && !isset($transfer_pairs[$row['id']])) {
             $result[] = $row;
         }
     }
