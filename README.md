@@ -3,10 +3,7 @@
 ![Last Commit](https://img.shields.io/github/last-commit/hanipubaidur/MoneyFlow?style=flat-square)
 
 ## 📝 Latest Updates
-- 🟢 **Custom date picker for analytics and report: select any date, see data for that day**
-- 🟢 **Income/Expense in dashboard and report now always show 0 if no data for selected period (day/week/month/year)**
-- 🟢 **Transfer transactions are never counted as income/expense in any chart or dashboard stats**
-- 🟢 **Weekly chart and stats use date-based week (Week 1 = tgl 1-7, Week 2 = tgl 8-14, dst)**
+- 🟢 **[BUGFIX] Transaction history now correctly displays all transactions after editing any transaction (no more missing transactions after edit)**
 
 <div align="center">
   
