@@ -366,7 +366,7 @@ try {
         FROM transactions 
         WHERE status != 'deleted' AND date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
         GROUP BY DATE_FORMAT(date, '%Y-%m'), DATE_FORMAT(date, '%b %Y')
-        ORDER BY period DESC
+        ORDER BY period ASC
         LIMIT 12";
 
     $trendsData = $conn->query($trendsQuery)->fetchAll(PDO::FETCH_ASSOC);
@@ -385,11 +385,11 @@ try {
     ]);
 
     $row = 4;
-    $prevIncome = 0;
+    $prevIncome = null;
     foreach($trendsData as $i => $data) {
         $netFlow = $data['income'] - $data['expense'];
         $efficiency = $data['income'] > 0 ? (($data['income'] - $data['expense']) / $data['income'] * 100) : 0;
-        $growth = $prevIncome > 0 ? (($data['income'] - $prevIncome) / $prevIncome * 100) : 0;
+        $growth = ($prevIncome !== null && $prevIncome != 0) ? (($data['income'] - $prevIncome) / $prevIncome * 100) : 0;
         $score = min(100, max(0, $efficiency + ($growth * 0.5)));
         $forecast = $data['income'] * (1 + ($growth / 100));
         
