@@ -68,7 +68,11 @@ try {
                     break;
                 }
             }
-        } elseif ($row['category'] !== 'transfer_in' && !isset($transfer_pairs[$row['id']])) {
+        } elseif ($row['category'] === 'transfer_in') {
+            // Sudah diproses di atas, skip
+            continue;
+        } else {
+            // Selalu masukkan transaksi non-transfer, tanpa cek $transfer_pairs
             $result[] = $row;
         }
     }
