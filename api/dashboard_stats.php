@@ -8,14 +8,18 @@ try {
     
     $period = $_GET['period'] ?? 'month';
     
-    // Perbaiki where clause
     switch($period) {
         case 'day':
             $where_clause = "DATE(date) = CURRENT_DATE";
             $label = "Daily";
             break;
         case 'week':
-            $where_clause = "YEARWEEK(date, 1) = YEARWEEK(CURRENT_DATE, 1)";
+            // Week by date: Week 1 = tgl 1-7, Week 2 = tgl 8-14, dst
+            $today = date('j'); // tgl 1-31
+            $weekNum = floor(($today - 1) / 7) + 1;
+            $startDay = ($weekNum - 1) * 7 + 1;
+            $endDay = min($startDay + 6, date('t'));
+            $where_clause = "MONTH(date) = MONTH(CURRENT_DATE) AND YEAR(date) = YEAR(CURRENT_DATE) AND DAY(date) BETWEEN $startDay AND $endDay";
             $label = "Weekly";
             break;
         case 'month':
